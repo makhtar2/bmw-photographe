@@ -5,24 +5,24 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { logoutAdmin, updatePricesSettings, updateBookingStatus, deleteBooking, addBookingAdmin, updateBookingFull, addPortfolioItem, deletePortfolioItem, updatePortfolioItem, updatePromoOffer } from "../app/actions";
 import { PricesSettings, Booking, PortfolioItem, EventPromo } from "../lib/db";
-import { 
-  LogOut, 
-  Settings, 
-  Image as ImageIcon, 
-  Calendar as CalendarIcon, 
-  Search, 
-  Trash2, 
-  CheckCircle2, 
-  XCircle, 
-  Plus, 
-  Clock, 
-  Bell, 
-  BellRing, 
-  Edit2, 
-  Upload, 
-  Sparkles, 
-  CalendarPlus, 
-  Send, 
+import {
+  LogOut,
+  Settings,
+  Image as ImageIcon,
+  Calendar as CalendarIcon,
+  Search,
+  Trash2,
+  CheckCircle2,
+  XCircle,
+  Plus,
+  Clock,
+  Bell,
+  BellRing,
+  Edit2,
+  Upload,
+  Sparkles,
+  CalendarPlus,
+  Send,
   Smartphone,
   Tag,
   ChevronLeft,
@@ -65,7 +65,7 @@ function playNotificationBeep() {
       osc2.start(ctx.currentTime);
       osc2.stop(ctx.currentTime + 0.3);
     }, 250);
-  } catch (e) {}
+  } catch (e) { }
 }
 
 function addToCalendar(b: Booking) {
@@ -105,7 +105,7 @@ function addToCalendar(b: Booking) {
 
   const blob = new Blob([icsLines], { type: "text/calendar;charset=utf-8" });
   const url = URL.createObjectURL(blob);
-  
+
   const link = document.createElement("a");
   link.href = url;
   link.download = `seance-${b.name.replace(/\s+/g, "_")}.ics`;
@@ -133,13 +133,13 @@ BMW Photographe`;
 
 export default function AdminDashboard({ initialSettings, initialBookings, initialPortfolio, initialPromo, currentRoute }: AdminDashboardProps) {
   const pathname = usePathname();
-  const activeTab = (currentRoute || pathname) === "/admin/agenda" 
-    ? "calendar" 
-    : (currentRoute || pathname) === "/admin/portfolio" 
-    ? "portfolio" 
-    : (currentRoute || pathname) === "/admin/tarifs" 
-    ? "prices" 
-    : "reservations";
+  const activeTab = (currentRoute || pathname) === "/admin/agenda"
+    ? "calendar"
+    : (currentRoute || pathname) === "/admin/portfolio"
+      ? "portfolio"
+      : (currentRoute || pathname) === "/admin/tarifs"
+        ? "prices"
+        : "reservations";
 
   const [settings, setSettings] = useState<PricesSettings>(initialSettings);
   const [bookings, setBookings] = useState<Booking[]>(initialBookings);
@@ -180,7 +180,7 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
 
   // Notification Toast
   const [notification, setNotification] = useState<{ type: "success" | "error"; message: string } | null>(null);
-  
+
   // Alerte Nouveau Client
   const [newBookingAlert, setNewBookingAlert] = useState<Booking | null>(null);
   const lastBookingCountRef = useRef(initialBookings.length);
@@ -202,7 +202,7 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
   // CRUD Réservations
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
   const [editingBookingId, setEditingBookingId] = useState<string | null>(null);
-  const [bookingForm, setBookingForm] = useState<Omit<Booking, "id"|"createdAt">>({
+  const [bookingForm, setBookingForm] = useState<Omit<Booking, "id" | "createdAt">>({
     name: "", phone: "", location: "Studio", formula: "", status: "En attente", date: "", time: "15:00"
   });
 
@@ -235,7 +235,7 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
       const res = await fetch("/api/admin", { cache: "no-store" });
       if (!res.ok) return;
       const data = await res.json();
-      
+
       if (data.bookings.length > lastBookingCountRef.current) {
         const newest: Booking = data.bookings[0];
         setNewBookingAlert(newest);
@@ -247,32 +247,32 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
             icon: "/icon-192.png"
           });
         }
-        
+
         setTimeout(() => setNewBookingAlert(null), 15000);
       }
-      
+
       lastBookingCountRef.current = data.bookings.length;
       setBookings(data.bookings);
       setSettings(data.settings);
       setPortfolio(data.portfolio);
-    } catch (e) {}
+    } catch (e) { }
   }, []);
 
-function getGoogleCalendarUrl(b: Booking) {
-  const startDateStr = b.date || new Date().toISOString().slice(0, 10);
-  const startTimeStr = b.time || "15:00";
-  const cleanDate = startDateStr.replace(/-/g, "");
-  const cleanTime = startTimeStr.replace(/:/g, "") + "00";
-  const endHour = (parseInt(startTimeStr.split(":")[0]) + 1).toString().padStart(2, "0");
-  const cleanEndTime = `${endHour}3000`;
+  function getGoogleCalendarUrl(b: Booking) {
+    const startDateStr = b.date || new Date().toISOString().slice(0, 10);
+    const startTimeStr = b.time || "15:00";
+    const cleanDate = startDateStr.replace(/-/g, "");
+    const cleanTime = startTimeStr.replace(/:/g, "") + "00";
+    const endHour = (parseInt(startTimeStr.split(":")[0]) + 1).toString().padStart(2, "0");
+    const cleanEndTime = `${endHour}3000`;
 
-  const title = encodeURIComponent(`Séance Photo - ${b.name}`);
-  const details = encodeURIComponent(`Client: ${b.name}\nTéléphone: ${b.phone}\nFormule: ${b.formula}\nLieu: ${b.location}\nStatut: ${b.status}`);
-  const location = encodeURIComponent(b.location === "Studio" ? "BMW Photographe Studio Thiès Médina Fall" : b.location);
-  const dates = `${cleanDate}T${cleanTime}/${cleanDate}T${cleanEndTime}`;
+    const title = encodeURIComponent(`Séance Photo - ${b.name}`);
+    const details = encodeURIComponent(`Client: ${b.name}\nTéléphone: ${b.phone}\nFormule: ${b.formula}\nLieu: ${b.location}\nStatut: ${b.status}`);
+    const location = encodeURIComponent(b.location === "Studio" ? "BMW Photographe Studio Thiès Médina Fall" : b.location);
+    const dates = `${cleanDate}T${cleanTime}/${cleanDate}T${cleanEndTime}`;
 
-  return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&details=${details}&location=${location}&dates=${dates}`;
-}
+    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&details=${details}&location=${location}&dates=${dates}`;
+  }
 
   useEffect(() => {
     pollingRef.current = setInterval(fetchLatestData, 4000);
@@ -344,11 +344,11 @@ function getGoogleCalendarUrl(b: Booking) {
 
   const openAddBookingModal = () => {
     setEditingBookingId(null);
-    setBookingForm({ 
-      name: "", 
-      phone: "", 
-      location: "Studio", 
-      formula: "", 
+    setBookingForm({
+      name: "",
+      phone: "",
+      location: "Studio",
+      formula: "",
       status: "En attente",
       date: new Date().toISOString().slice(0, 10),
       time: "15:00"
@@ -358,11 +358,11 @@ function getGoogleCalendarUrl(b: Booking) {
 
   const openEditBookingModal = (b: Booking) => {
     setEditingBookingId(b.id);
-    setBookingForm({ 
-      name: b.name, 
-      phone: b.phone, 
-      location: b.location, 
-      formula: b.formula, 
+    setBookingForm({
+      name: b.name,
+      phone: b.phone,
+      location: b.location,
+      formula: b.formula,
       status: b.status,
       date: b.date || "",
       time: b.time || "15:00"
@@ -505,12 +505,12 @@ function getGoogleCalendarUrl(b: Booking) {
   };
 
   const filteredBookings = bookings.filter((b) => {
-    const matchQuery = 
+    const matchQuery =
       b.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       b.phone.includes(searchQuery) ||
       b.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
       b.formula.toLowerCase().includes(searchQuery.toLowerCase());
-    
+
     const matchStatus = statusFilter === "Tous" || b.status === statusFilter;
     return matchQuery && matchStatus;
   });
@@ -531,7 +531,7 @@ function getGoogleCalendarUrl(b: Booking) {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans pb-24 md:pb-12">
-      
+
       {/* 1. HEADER ADMIN MOBILE & DESKTOP */}
       <header className="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-8 h-16 sm:h-20 flex items-center justify-between">
@@ -573,9 +573,8 @@ function getGoogleCalendarUrl(b: Booking) {
 
       {/* TOAST NOTIFICATION */}
       {notification && (
-        <div className={`fixed top-20 sm:top-24 right-4 sm:right-6 z-50 px-4 py-3 rounded-2xl shadow-xl border text-xs font-extrabold flex items-center gap-2 transition-all anim-rise ${
-          notification.type === "success" ? "bg-slate-900 text-white border-slate-800" : "bg-red-900 text-white border-red-800"
-        }`}>
+        <div className={`fixed top-20 sm:top-24 right-4 sm:right-6 z-50 px-4 py-3 rounded-2xl shadow-xl border text-xs font-extrabold flex items-center gap-2 transition-all anim-rise ${notification.type === "success" ? "bg-slate-900 text-white border-slate-800" : "bg-red-900 text-white border-red-800"
+          }`}>
           {notification.type === "success" ? <CheckCircle2 className="w-4 h-4 text-[--brand]" /> : <XCircle className="w-4 h-4 text-red-400" />}
           {notification.message}
         </div>
@@ -599,14 +598,13 @@ function getGoogleCalendarUrl(b: Booking) {
 
       {/* CONTENU PRINCIPAL */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-8 py-6 sm:py-8 space-y-6">
-        
+
         {/* NAVIGATION ONGLETS DESKTOP MULTI-PAGES */}
         <div className="hidden md:flex bg-slate-200/60 p-1.5 rounded-2xl gap-2 overflow-x-auto no-scrollbar">
           <Link
             href="/admin"
-            className={`flex-1 py-3 px-5 text-xs font-extrabold uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-2 whitespace-nowrap ${
-              activeTab === "reservations" ? "bg-slate-900 text-white shadow-md" : "text-slate-600 hover:text-slate-900"
-            }`}
+            className={`flex-1 py-3 px-5 text-xs font-extrabold uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-2 whitespace-nowrap ${activeTab === "reservations" ? "bg-slate-900 text-white shadow-md" : "text-slate-600 hover:text-slate-900"
+              }`}
           >
             <CalendarIcon className="w-4 h-4 text-[--brand]" />
             Réservations ({bookings.length})
@@ -614,9 +612,8 @@ function getGoogleCalendarUrl(b: Booking) {
 
           <Link
             href="/admin/agenda"
-            className={`flex-1 py-3 px-5 text-xs font-extrabold uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-2 whitespace-nowrap ${
-              activeTab === "calendar" ? "bg-slate-900 text-white shadow-md" : "text-slate-600 hover:text-slate-900"
-            }`}
+            className={`flex-1 py-3 px-5 text-xs font-extrabold uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-2 whitespace-nowrap ${activeTab === "calendar" ? "bg-slate-900 text-white shadow-md" : "text-slate-600 hover:text-slate-900"
+              }`}
           >
             <CalendarPlus className="w-4 h-4 text-[--brand]" />
             Agenda &amp; Planning
@@ -624,9 +621,8 @@ function getGoogleCalendarUrl(b: Booking) {
 
           <Link
             href="/admin/portfolio"
-            className={`flex-1 py-3 px-5 text-xs font-extrabold uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-2 whitespace-nowrap ${
-              activeTab === "portfolio" ? "bg-slate-900 text-white shadow-md" : "text-slate-600 hover:text-slate-900"
-            }`}
+            className={`flex-1 py-3 px-5 text-xs font-extrabold uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-2 whitespace-nowrap ${activeTab === "portfolio" ? "bg-slate-900 text-white shadow-md" : "text-slate-600 hover:text-slate-900"
+              }`}
           >
             <ImageIcon className="w-4 h-4 text-[--brand]" />
             Portfolio ({portfolio.length})
@@ -634,9 +630,8 @@ function getGoogleCalendarUrl(b: Booking) {
 
           <Link
             href="/admin/tarifs"
-            className={`flex-1 py-3 px-5 text-xs font-extrabold uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-2 whitespace-nowrap ${
-              activeTab === "prices" ? "bg-slate-900 text-white shadow-md" : "text-slate-600 hover:text-slate-900"
-            }`}
+            className={`flex-1 py-3 px-5 text-xs font-extrabold uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-2 whitespace-nowrap ${activeTab === "prices" ? "bg-slate-900 text-white shadow-md" : "text-slate-600 hover:text-slate-900"
+              }`}
           >
             <Settings className="w-4 h-4 text-[--brand]" />
             Tarifs
@@ -715,11 +710,10 @@ function getGoogleCalendarUrl(b: Booking) {
                   <button
                     key={status}
                     onClick={() => setStatusFilter(status)}
-                    className={`px-3 py-1.5 text-[11px] font-extrabold uppercase tracking-wider rounded-xl border transition-all shrink-0 ${
-                      statusFilter === status
+                    className={`px-3 py-1.5 text-[11px] font-extrabold uppercase tracking-wider rounded-xl border transition-all shrink-0 ${statusFilter === status
                         ? "bg-slate-900 border-slate-900 text-white shadow-sm"
                         : "bg-white border-slate-200 text-slate-500 hover:text-slate-900"
-                    }`}
+                      }`}
                   >
                     {status}
                   </button>
@@ -738,13 +732,12 @@ function getGoogleCalendarUrl(b: Booking) {
                         <h3 className="font-extrabold text-slate-900 text-base">{b.name}</h3>
                         <p className="text-xs font-semibold text-slate-500">{b.phone}</p>
                       </div>
-                      <span className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase border ${
-                        b.status === "Confirmé"
+                      <span className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase border ${b.status === "Confirmé"
                           ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                           : b.status === "En attente"
-                          ? "bg-amber-50 text-amber-700 border-amber-200"
-                          : "bg-slate-100 text-slate-500 border-slate-200"
-                      }`}>
+                            ? "bg-amber-50 text-amber-700 border-amber-200"
+                            : "bg-slate-100 text-slate-500 border-slate-200"
+                        }`}>
                         {b.status}
                       </span>
                     </div>
@@ -844,13 +837,12 @@ function getGoogleCalendarUrl(b: Booking) {
                           </td>
 
                           <td className="px-6 py-4 space-y-1.5">
-                            <span className={`inline-block px-2.5 py-0.5 text-[9px] uppercase font-extrabold tracking-wider rounded-md border ${
-                              booking.location === "Studio" 
-                                ? "bg-[--brand]/10 text-[--brand] border-[--brand]/20" 
+                            <span className={`inline-block px-2.5 py-0.5 text-[9px] uppercase font-extrabold tracking-wider rounded-md border ${booking.location === "Studio"
+                                ? "bg-[--brand]/10 text-[--brand] border-[--brand]/20"
                                 : booking.location === "Mariage"
-                                ? "bg-purple-50 text-purple-700 border-purple-200"
-                                : "bg-blue-50 text-blue-700 border-blue-200"
-                            }`}>
+                                  ? "bg-purple-50 text-purple-700 border-purple-200"
+                                  : "bg-blue-50 text-blue-700 border-blue-200"
+                              }`}>
                               {booking.location}
                             </span>
                             <div className="text-slate-800 font-extrabold text-xs truncate max-w-[200px]" title={booking.formula}>
@@ -870,16 +862,14 @@ function getGoogleCalendarUrl(b: Booking) {
                           </td>
 
                           <td className="px-6 py-4">
-                            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-extrabold uppercase border ${
-                              booking.status === "Confirmé"
+                            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-extrabold uppercase border ${booking.status === "Confirmé"
                                 ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                                 : booking.status === "En attente"
-                                ? "bg-amber-50 text-amber-700 border-amber-200"
-                                : "bg-slate-100 text-slate-500 border-slate-200"
-                            }`}>
-                              <span className={`w-1.5 h-1.5 rounded-full ${
-                                booking.status === "Confirmé" ? "bg-emerald-500" : booking.status === "En attente" ? "bg-amber-500" : "bg-slate-400"
-                              }`}></span>
+                                  ? "bg-amber-50 text-amber-700 border-amber-200"
+                                  : "bg-slate-100 text-slate-500 border-slate-200"
+                              }`}>
+                              <span className={`w-1.5 h-1.5 rounded-full ${booking.status === "Confirmé" ? "bg-emerald-500" : booking.status === "En attente" ? "bg-amber-500" : "bg-slate-400"
+                                }`}></span>
                               {booking.status}
                             </span>
                           </td>
@@ -974,7 +964,7 @@ function getGoogleCalendarUrl(b: Booking) {
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </button>
-                
+
                 <h4 className="text-base font-extrabold text-slate-900 capitalize min-w-[140px] text-center">
                   {agendaDate.toLocaleDateString("fr-FR", { month: "long", year: "numeric" })}
                 </h4>
@@ -999,17 +989,15 @@ function getGoogleCalendarUrl(b: Booking) {
               <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
                 <button
                   onClick={() => setAgendaView("grid")}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-extrabold transition-all ${
-                    agendaView === "grid" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-900"
-                  }`}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-extrabold transition-all ${agendaView === "grid" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-900"
+                    }`}
                 >
                   <Grid className="w-3.5 h-3.5" /> Grille Mensuelle
                 </button>
                 <button
                   onClick={() => setAgendaView("list")}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-extrabold transition-all ${
-                    agendaView === "list" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-900"
-                  }`}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-extrabold transition-all ${agendaView === "list" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-900"
+                    }`}
                 >
                   <List className="w-3.5 h-3.5" /> Vue Liste ({bookings.length})
                 </button>
@@ -1060,14 +1048,12 @@ function getGoogleCalendarUrl(b: Booking) {
                             setBookingForm({ name: "", phone: "", location: "Studio", formula: "Studio — 5 photos", status: "Confirmé", date: dateStr, time: "15:00" });
                             setIsBookingModalOpen(true);
                           }}
-                          className={`min-h-[80px] sm:min-h-[110px] p-2 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between group hover:border-[--brand] hover:shadow-sm ${
-                            isToday ? "bg-amber-50/60 border-[--brand]" : "bg-white border-slate-200"
-                          }`}
+                          className={`min-h-[80px] sm:min-h-[110px] p-2 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between group hover:border-[--brand] hover:shadow-sm ${isToday ? "bg-amber-50/60 border-[--brand]" : "bg-white border-slate-200"
+                            }`}
                         >
                           <div className="flex items-center justify-between">
-                            <span className={`w-6 h-6 rounded-full text-xs font-extrabold flex items-center justify-center ${
-                              isToday ? "bg-[--brand] text-white" : "text-slate-700 group-hover:bg-slate-100"
-                            }`}>
+                            <span className={`w-6 h-6 rounded-full text-xs font-extrabold flex items-center justify-center ${isToday ? "bg-[--brand] text-white" : "text-slate-700 group-hover:bg-slate-100"
+                              }`}>
                               {d}
                             </span>
                             {dayBookings.length > 0 && (
@@ -1086,13 +1072,12 @@ function getGoogleCalendarUrl(b: Booking) {
                                   e.stopPropagation();
                                   openEditBookingModal(b);
                                 }}
-                                className={`px-1.5 py-1 rounded-lg text-[9px] font-extrabold truncate border ${
-                                  b.status === "Confirmé"
+                                className={`px-1.5 py-1 rounded-lg text-[9px] font-extrabold truncate border ${b.status === "Confirmé"
                                     ? "bg-emerald-50 text-emerald-800 border-emerald-200"
                                     : b.status === "En attente"
-                                    ? "bg-amber-50 text-amber-800 border-amber-200"
-                                    : "bg-slate-100 text-slate-600 border-slate-200"
-                                }`}
+                                      ? "bg-amber-50 text-amber-800 border-amber-200"
+                                      : "bg-slate-100 text-slate-600 border-slate-200"
+                                  }`}
                                 title={`${b.name} (${b.time || "15:00"}) — ${b.formula}`}
                               >
                                 {b.time || "15:00"} {b.name}
@@ -1121,13 +1106,12 @@ function getGoogleCalendarUrl(b: Booking) {
                         <p className="text-xs font-semibold text-slate-500">{b.phone}</p>
                       </div>
 
-                      <span className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase border ${
-                        b.status === "Confirmé"
+                      <span className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase border ${b.status === "Confirmé"
                           ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                           : b.status === "En attente"
-                          ? "bg-amber-50 text-amber-700 border-amber-200"
-                          : "bg-slate-100 text-slate-500 border-slate-200"
-                      }`}>
+                            ? "bg-amber-50 text-amber-700 border-amber-200"
+                            : "bg-slate-100 text-slate-500 border-slate-200"
+                        }`}>
                         {b.status}
                       </span>
                     </div>
@@ -1203,7 +1187,7 @@ function getGoogleCalendarUrl(b: Booking) {
                       {item.title}
                     </p>
                   </div>
-                  
+
                   <div className="mt-3 pt-2 border-t border-slate-100 flex items-center justify-between">
                     <span className="text-[10px] font-mono text-slate-400">ID #{item.id}</span>
                     <div className="flex items-center gap-1">
@@ -1460,28 +1444,28 @@ function getGoogleCalendarUrl(b: Booking) {
               <form onSubmit={handleSaveBooking} className="p-6 space-y-4">
                 <div>
                   <label className="block text-xs font-extrabold text-slate-600 mb-1.5">Nom du client *</label>
-                  <input type="text" required value={bookingForm.name} onChange={e => setBookingForm({...bookingForm, name: e.target.value})} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 focus:border-[--brand] rounded-xl text-xs font-bold focus:outline-none" />
+                  <input type="text" required value={bookingForm.name} onChange={e => setBookingForm({ ...bookingForm, name: e.target.value })} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 focus:border-[--brand] rounded-xl text-xs font-bold focus:outline-none" />
                 </div>
                 <div>
                   <label className="block text-xs font-extrabold text-slate-600 mb-1.5">Téléphone WhatsApp *</label>
-                  <input type="tel" required value={bookingForm.phone} onChange={e => setBookingForm({...bookingForm, phone: e.target.value})} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 focus:border-[--brand] rounded-xl text-xs font-bold focus:outline-none" />
+                  <input type="tel" required value={bookingForm.phone} onChange={e => setBookingForm({ ...bookingForm, phone: e.target.value })} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 focus:border-[--brand] rounded-xl text-xs font-bold focus:outline-none" />
                 </div>
 
                 <div className="grid grid-cols-2 gap-3 bg-[--brand]/5 p-3 rounded-2xl border border-[--brand]/20">
                   <div>
                     <label className="block text-xs font-extrabold text-[--brand] mb-1">Date de Séance</label>
-                    <input type="date" value={bookingForm.date || ""} onChange={e => setBookingForm({...bookingForm, date: e.target.value})} className="w-full px-3 py-2 bg-white border border-slate-200 focus:border-[--brand] rounded-xl text-xs font-extrabold focus:outline-none" />
+                    <input type="date" value={bookingForm.date || ""} onChange={e => setBookingForm({ ...bookingForm, date: e.target.value })} className="w-full px-3 py-2 bg-white border border-slate-200 focus:border-[--brand] rounded-xl text-xs font-extrabold focus:outline-none" />
                   </div>
                   <div>
                     <label className="block text-xs font-extrabold text-[--brand] mb-1">Heure de Séance</label>
-                    <input type="time" value={bookingForm.time || "15:00"} onChange={e => setBookingForm({...bookingForm, time: e.target.value})} className="w-full px-3 py-2 bg-white border border-slate-200 focus:border-[--brand] rounded-xl text-xs font-extrabold focus:outline-none" />
+                    <input type="time" value={bookingForm.time || "15:00"} onChange={e => setBookingForm({ ...bookingForm, time: e.target.value })} className="w-full px-3 py-2 bg-white border border-slate-200 focus:border-[--brand] rounded-xl text-xs font-extrabold focus:outline-none" />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-extrabold text-slate-600 mb-1.5">Lieu *</label>
-                    <select value={bookingForm.location} onChange={e => setBookingForm({...bookingForm, location: e.target.value as any})} className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 focus:border-[--brand] rounded-xl text-xs font-extrabold focus:outline-none cursor-pointer">
+                    <select value={bookingForm.location} onChange={e => setBookingForm({ ...bookingForm, location: e.target.value as any })} className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 focus:border-[--brand] rounded-xl text-xs font-extrabold focus:outline-none cursor-pointer">
                       <option value="Studio">Studio</option>
                       <option value="Domicile">Domicile / Extérieur</option>
                       <option value="Mariage">Mariage</option>
@@ -1489,7 +1473,7 @@ function getGoogleCalendarUrl(b: Booking) {
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-slate-600 mb-1.5">Statut *</label>
-                    <select value={bookingForm.status} onChange={e => setBookingForm({...bookingForm, status: e.target.value as any})} className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 focus:border-[--brand] rounded-xl text-xs font-extrabold focus:outline-none cursor-pointer">
+                    <select value={bookingForm.status} onChange={e => setBookingForm({ ...bookingForm, status: e.target.value as any })} className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 focus:border-[--brand] rounded-xl text-xs font-extrabold focus:outline-none cursor-pointer">
                       <option value="En attente">En attente</option>
                       <option value="Confirmé">Confirmé</option>
                       <option value="Annulé">Annulé</option>
@@ -1498,7 +1482,7 @@ function getGoogleCalendarUrl(b: Booking) {
                 </div>
                 <div>
                   <label className="block text-xs font-extrabold text-slate-600 mb-1.5">Formule choisie *</label>
-                  <input type="text" required placeholder="Ex: 5 photos - 10 000 FCFA" value={bookingForm.formula} onChange={e => setBookingForm({...bookingForm, formula: e.target.value})} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 focus:border-[--brand] rounded-xl text-xs font-bold focus:outline-none" />
+                  <input type="text" required placeholder="Ex: 5 photos - 10 000 FCFA" value={bookingForm.formula} onChange={e => setBookingForm({ ...bookingForm, formula: e.target.value })} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 focus:border-[--brand] rounded-xl text-xs font-bold focus:outline-none" />
                 </div>
                 <div className="pt-4 flex gap-3">
                   <button type="button" onClick={() => setIsBookingModalOpen(false)} className="flex-1 py-3 bg-slate-100 text-slate-700 font-extrabold rounded-xl text-xs hover:bg-slate-200 transition-colors">Annuler</button>
@@ -1526,11 +1510,11 @@ function getGoogleCalendarUrl(b: Booking) {
                 {/* APERÇU DE L'IMAGE ET BOUTON DE REMPLACEMENT */}
                 {editingItem || newPhoto.src ? (
                   <div className="relative w-full h-52 bg-slate-100 rounded-2xl overflow-hidden border border-slate-200 group">
-                    <Image 
-                      src={editingItem ? editingItem.src : newPhoto.src} 
-                      alt="Aperçu photo" 
-                      fill 
-                      className="object-cover" 
+                    <Image
+                      src={editingItem ? editingItem.src : newPhoto.src}
+                      alt="Aperçu photo"
+                      fill
+                      className="object-cover"
                     />
                     <div className="absolute inset-0 bg-slate-950/40 opacity-90 sm:opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center p-4">
                       <label className="bg-white text-slate-900 px-4 py-2.5 rounded-xl text-xs font-extrabold flex items-center gap-2 cursor-pointer shadow-lg hover:bg-[--brand] hover:text-white transition-all">
@@ -1632,9 +1616,8 @@ function getGoogleCalendarUrl(b: Booking) {
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-slate-950/95 backdrop-blur-md border-t border-slate-800 px-3 py-2.5 flex items-center justify-around text-white shadow-2xl">
         <Link
           href="/admin"
-          className={`flex flex-col items-center justify-center gap-1 py-1 px-3 rounded-xl transition-all ${
-            activeTab === "reservations" ? "text-[--brand] font-extrabold scale-105" : "text-slate-400 hover:text-white font-semibold"
-          }`}
+          className={`flex flex-col items-center justify-center gap-1 py-1 px-3 rounded-xl transition-all ${activeTab === "reservations" ? "text-[--brand] font-extrabold scale-105" : "text-slate-400 hover:text-white font-semibold"
+            }`}
         >
           <CalendarIcon className="w-5 h-5" />
           <span className="text-[10px]">Client</span>
@@ -1642,9 +1625,8 @@ function getGoogleCalendarUrl(b: Booking) {
 
         <Link
           href="/admin/agenda"
-          className={`flex flex-col items-center justify-center gap-1 py-1 px-3 rounded-xl transition-all ${
-            activeTab === "calendar" ? "text-[--brand] font-extrabold scale-105" : "text-slate-400 hover:text-white font-semibold"
-          }`}
+          className={`flex flex-col items-center justify-center gap-1 py-1 px-3 rounded-xl transition-all ${activeTab === "calendar" ? "text-[--brand] font-extrabold scale-105" : "text-slate-400 hover:text-white font-semibold"
+            }`}
         >
           <CalendarPlus className="w-5 h-5" />
           <span className="text-[10px]">Agenda</span>
@@ -1652,9 +1634,8 @@ function getGoogleCalendarUrl(b: Booking) {
 
         <Link
           href="/admin/portfolio"
-          className={`flex flex-col items-center justify-center gap-1 py-1 px-3 rounded-xl transition-all ${
-            activeTab === "portfolio" ? "text-[--brand] font-extrabold scale-105" : "text-slate-400 hover:text-white font-semibold"
-          }`}
+          className={`flex flex-col items-center justify-center gap-1 py-1 px-3 rounded-xl transition-all ${activeTab === "portfolio" ? "text-[--brand] font-extrabold scale-105" : "text-slate-400 hover:text-white font-semibold"
+            }`}
         >
           <ImageIcon className="w-5 h-5" />
           <span className="text-[10px]">Photos</span>
@@ -1662,9 +1643,8 @@ function getGoogleCalendarUrl(b: Booking) {
 
         <Link
           href="/admin/tarifs"
-          className={`flex flex-col items-center justify-center gap-1 py-1 px-3 rounded-xl transition-all ${
-            activeTab === "prices" ? "text-[--brand] font-extrabold scale-105" : "text-slate-400 hover:text-white font-semibold"
-          }`}
+          className={`flex flex-col items-center justify-center gap-1 py-1 px-3 rounded-xl transition-all ${activeTab === "prices" ? "text-[--brand] font-extrabold scale-105" : "text-slate-400 hover:text-white font-semibold"
+            }`}
         >
           <Settings className="w-5 h-5" />
           <span className="text-[10px]">Tarifs</span>

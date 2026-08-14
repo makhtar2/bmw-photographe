@@ -32,17 +32,26 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: "BMW Photographe" }],
   openGraph: {
-    title: "BMW Photographe | Photographe de Mode & Lifestyle à Thiès",
-    description: "Réservez votre séance photo exclusive. Studio et extérieur à Thiès Médina Fall.",
-    url: "https://bmw-photographe.vercel.app",
+    title: "BMW Photographe | Studio Photo Professionnel à Thiès",
+    description: "Réservez votre séance photo exclusive (Studio & Extérieur). Disponible partout au Sénégal (Thiès, Dakar, Mbour...).",
+    url: "https://bmwphotographe.vercel.app",
     siteName: "BMW Photographe",
+    images: [
+      {
+        url: "/camera-hero.png",
+        width: 1200,
+        height: 630,
+        alt: "BMW Photographe Studio Thiès",
+      },
+    ],
     locale: "fr_SN",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "BMW Photographe | Studio & Extérieur",
+    title: "BMW Photographe | Studio & Extérieur à Thiès",
     description: "Immortalisez vos plus beaux moments avec BMW Photographe à Thiès Médina Fall.",
+    images: ["/camera-hero.png"],
   },
   icons: {
     icon: "/logo-square.png",
