@@ -24,43 +24,44 @@ interface MaterialIconProps {
 }
 
 export default function MaterialIcon({ name, className = "" }: MaterialIconProps) {
+  const iconClass = `shrink-0 ${className}`;
   switch (name) {
     case "person":
-      return <User className={className} />;
+      return <User className={iconClass} />;
     case "phone":
     case "call":
-      return <Phone className={className} />;
+      return <Phone className={iconClass} />;
     case "photo_camera":
-      return <Camera className={className} />;
+      return <Camera className={iconClass} />;
     case "home":
-      return <Home className={className} />;
+      return <Home className={iconClass} />;
     case "favorite":
-      return <Heart className={className} />;
+      return <Heart className={iconClass} />;
     case "layers":
-      return <Layers className={className} />;
+      return <Layers className={iconClass} />;
     case "keyboard_arrow_down":
-      return <ChevronDown className={className} />;
+      return <ChevronDown className={iconClass} />;
     case "check_circle":
-      return <CheckCircle2 className={className} />;
+      return <CheckCircle2 className={iconClass} />;
     case "event":
     case "calendar_month":
-      return <Calendar className={className} />;
+      return <Calendar className={iconClass} />;
     case "schedule":
-      return <Clock className={className} />;
+      return <Clock className={iconClass} />;
     case "close":
-      return <X className={className} />;
+      return <X className={iconClass} />;
     case "share":
-      return <Share2 className={className} />;
+      return <Share2 className={iconClass} />;
     case "download":
-      return <Download className={className} />;
+      return <Download className={iconClass} />;
     case "place":
-      return <MapPin className={className} />;
+      return <MapPin className={iconClass} />;
     case "chat":
-      return <MessageCircle className={className} />;
+      return <MessageCircle className={iconClass} />;
     case "grid_view":
-      return <LayoutGrid className={className} />;
+      return <LayoutGrid className={iconClass} />;
     default:
-      return <Camera className={className} />;
+      return <Camera className={iconClass} />;
   }
 }
 

@@ -172,9 +172,9 @@ export default function BookingForm({ settings, id = "reservation" }: BookingFor
                       }`}
                     >
                       <input type="radio" value={l} {...register("location")} className="sr-only" />
-                      <span className="inline-flex max-w-full items-center justify-center items-center gap-1.5 truncate">
-                        <MaterialIcon name={l === "Studio" ? "photo_camera" : l === "Domicile" ? "home" : "favorite"} className="w-4 h-4 shrink-0" />
-                        <span>{l === "Studio" ? "Studio" : l === "Domicile" ? "Extérieur" : "Mariage"}</span>
+                      <span className="inline-flex max-w-full items-center justify-center gap-1 sm:gap-1.5 px-1 truncate">
+                        <MaterialIcon name={l === "Studio" ? "photo_camera" : l === "Domicile" ? "home" : "favorite"} className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                        <span className="truncate">{l === "Studio" ? "Studio" : l === "Domicile" ? "Extérieur" : "Mariage"}</span>
                       </span>
                     </label>
                   ))}
