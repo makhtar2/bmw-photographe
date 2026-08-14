@@ -44,6 +44,11 @@ export const metadata: Metadata = {
     title: "BMW Photographe | Studio & Extérieur",
     description: "Immortalisez vos plus beaux moments avec BMW Photographe à Thiès Médina Fall.",
   },
+  icons: {
+    icon: "/logo-square.png",
+    shortcut: "/logo-square.png",
+    apple: "/logo-square.png",
+  },
   robots: "index, follow",
   appleWebApp: {
     capable: true,
