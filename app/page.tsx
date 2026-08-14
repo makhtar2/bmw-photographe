@@ -63,7 +63,7 @@ export default async function Home() {
           <div className="mx-auto grid max-w-6xl items-center gap-10 lg:grid-cols-2">
             
             <div className="order-2 space-y-6 lg:order-1 flex flex-col items-center lg:items-start text-center lg:text-left">
-              <div className="relative w-80 sm:w-96 h-28 sm:h-32 mx-auto lg:mx-0">
+              <div className="relative w-48 sm:w-64 md:w-80 h-16 sm:h-20 md:h-24 mx-auto lg:mx-0">
                 <Image 
                   src="/logo.png" 
                   alt="BMW Photographe Logo" 

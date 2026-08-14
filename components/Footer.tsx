@@ -19,7 +19,7 @@ export default function Footer() {
         
         {/* Brand Column */}
         <div className="md:col-span-5 space-y-6">
-          <div className="relative w-72 h-24 brightness-0 invert opacity-90 mx-auto md:mx-0">
+          <div className="relative w-44 sm:w-56 h-14 sm:h-18 brightness-0 invert opacity-90 mx-auto md:mx-0">
             <Image 
               src="/logo.png" 
               alt="BMW Photographe" 
