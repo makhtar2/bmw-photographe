@@ -317,6 +317,19 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
     });
   };
 
+  const handleTogglePromo = async (newEnabled: boolean) => {
+    const updatedPromo = { ...promo, enabled: newEnabled };
+    setPromo(updatedPromo);
+    startTransition(async () => {
+      const res = await updatePromoOffer(updatedPromo);
+      if (res.success) {
+        triggerNotification("success", newEnabled ? "Offre promo activée avec succès !" : "Offre promo désactivée.");
+      } else {
+        triggerNotification("error", res.message || "Erreur lors de la sauvegarde");
+      }
+    });
+  };
+
   const handleStatusChange = async (id: string, newStatus: Booking["status"]) => {
     startTransition(async () => {
       const res = await updateBookingStatus(id, newStatus);
@@ -1327,7 +1340,7 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
                   <input
                     type="checkbox"
                     checked={promo.enabled}
-                    onChange={(e) => setPromo({ ...promo, enabled: e.target.checked })}
+                    onChange={(e) => handleTogglePromo(e.target.checked)}
                     className="sr-only peer"
                   />
                   <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[--brand]"></div>
