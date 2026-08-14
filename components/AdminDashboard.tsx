@@ -1289,8 +1289,11 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
                       <div className="relative">
                         <input
                           type="number"
-                          value={settings[key]}
-                          onChange={(e) => setSettings(prev => ({ ...prev, [key]: parseInt(e.target.value) || 0 }))}
+                          value={settings[key] === 0 ? "" : (settings[key] ?? "")}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setSettings(prev => ({ ...prev, [key]: val === "" ? 0 : parseInt(val, 10) || 0 }));
+                          }}
                           className="w-full pr-14 pl-4 py-2.5 bg-slate-50 border border-slate-200 focus:border-[--brand] rounded-xl text-xs font-extrabold focus:outline-none transition-colors"
                         />
                         <span className="absolute inset-y-0 right-0 pr-3 flex items-center text-[10px] font-extrabold text-slate-400 uppercase">FCFA</span>
@@ -1314,8 +1317,11 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
                       <div className="relative">
                         <input
                           type="number"
-                          value={settings[key]}
-                          onChange={(e) => setSettings(prev => ({ ...prev, [key]: parseInt(e.target.value) || 0 }))}
+                          value={settings[key] === 0 ? "" : (settings[key] ?? "")}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setSettings(prev => ({ ...prev, [key]: val === "" ? 0 : parseInt(val, 10) || 0 }));
+                          }}
                           className="w-full pr-14 pl-4 py-2.5 bg-slate-50 border border-slate-200 focus:border-[--brand] rounded-xl text-xs font-extrabold focus:outline-none transition-colors"
                         />
                         <span className="absolute inset-y-0 right-0 pr-3 flex items-center text-[10px] font-extrabold text-slate-400 uppercase">FCFA</span>
@@ -1342,8 +1348,11 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
                       <div className="relative">
                         <input
                           type="number"
-                          value={settings[key]}
-                          onChange={(e) => setSettings(prev => ({ ...prev, [key]: parseInt(e.target.value) || 0 }))}
+                          value={settings[key] === 0 ? "" : (settings[key] ?? "")}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setSettings(prev => ({ ...prev, [key]: val === "" ? 0 : parseInt(val, 10) || 0 }));
+                          }}
                           className="w-full pr-14 pl-4 py-2.5 bg-slate-50 border border-slate-200 focus:border-[--brand] rounded-xl text-xs font-extrabold focus:outline-none transition-colors"
                         />
                         <span className="absolute inset-y-0 right-0 pr-3 flex items-center text-[10px] font-extrabold text-slate-400 uppercase">FCFA</span>
@@ -1448,13 +1457,14 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
                         <div className="relative">
                           <input
                             type="number"
-                            value={promo.promoPrices[key] ?? settings[key]}
+                            value={(promo.promoPrices[key] ?? settings[key]) === 0 ? "" : (promo.promoPrices[key] ?? settings[key] ?? "")}
                             onChange={(e) => {
-                              const val = parseInt(e.target.value) || 0;
-                              setPromo({
-                                ...promo,
-                                promoPrices: { ...promo.promoPrices, [key]: val }
-                              });
+                              const val = e.target.value;
+                              const numVal = val === "" ? 0 : parseInt(val, 10) || 0;
+                              setPromo(prev => ({
+                                ...prev,
+                                promoPrices: { ...prev.promoPrices, [key]: numVal }
+                              }));
                             }}
                             className="w-full pr-12 pl-3 py-2 bg-white border border-slate-200 focus:border-[--brand] rounded-xl text-xs font-extrabold focus:outline-none"
                           />

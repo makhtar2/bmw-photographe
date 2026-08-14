@@ -31,23 +31,23 @@ export default function BookingForm({ settings, id = "reservation" }: BookingFor
   const loc = watch("location");
 
   const studioFormulas = [
-    { value: "5 photos — 10 000 FCFA",  label: "5 photos — 10 000 FCFA" },
-    { value: "7 photos — 15 000 FCFA",  label: "7 photos — 15 000 FCFA" },
-    { value: "10 photos — 20 000 FCFA", label: "10 photos — 20 000 FCFA" },
-    { value: "15 photos — 30 000 FCFA", label: "15 photos — 30 000 FCFA" },
-    { value: "20 photos — 50 000 FCFA", label: "20 photos — 50 000 FCFA" },
+    { value: `5 photos — ${(settings.studio_5 || 10000).toLocaleString("fr-FR")} FCFA`,  label: `5 photos — ${(settings.studio_5 || 10000).toLocaleString("fr-FR")} FCFA` },
+    { value: `7 photos — ${(settings.studio_7 || 15000).toLocaleString("fr-FR")} FCFA`,  label: `7 photos — ${(settings.studio_7 || 15000).toLocaleString("fr-FR")} FCFA` },
+    { value: `10 photos — ${(settings.studio_10 || 20000).toLocaleString("fr-FR")} FCFA`, label: `10 photos — ${(settings.studio_10 || 20000).toLocaleString("fr-FR")} FCFA` },
+    { value: `15 photos — ${(settings.studio_15 || 30000).toLocaleString("fr-FR")} FCFA`, label: `15 photos — ${(settings.studio_15 || 30000).toLocaleString("fr-FR")} FCFA` },
+    { value: `20 photos — ${(settings.studio_20 || 50000).toLocaleString("fr-FR")} FCFA`, label: `20 photos — ${(settings.studio_20 || 50000).toLocaleString("fr-FR")} FCFA` },
   ];
 
   const domicileFormulas = [
-    { value: "5 photos — 25 000 FCFA",  label: "5 photos — 25 000 FCFA" },
-    { value: "10 photos — 40 000 FCFA", label: "10 photos — 40 000 FCFA" },
+    { value: `5 photos — ${(settings.exterieur_5 || 25000).toLocaleString("fr-FR")} FCFA`,  label: `5 photos — ${(settings.exterieur_5 || 25000).toLocaleString("fr-FR")} FCFA` },
+    { value: `10 photos — ${(settings.exterieur_10 || 40000).toLocaleString("fr-FR")} FCFA`, label: `10 photos — ${(settings.exterieur_10 || 40000).toLocaleString("fr-FR")} FCFA` },
   ];
 
   const mariageFormulas = [
-    { value: "80 photos — 110 000 FCFA",                 label: "80 photos — 110 000 FCFA" },
-    { value: "100 photos — 125 000 FCFA",                label: "100 photos — 125 000 FCFA" },
-    { value: "120 photos — 150 000 FCFA",                label: "120 photos — 150 000 FCFA" },
-    { value: "Pack Tak Diaka · 60 photos — 85 000 FCFA", label: "Pack Tak Diaka · 60 photos — 85 000 FCFA" },
+    { value: `80 photos — ${(settings.ceremonie_80 || 110000).toLocaleString("fr-FR")} FCFA`,                 label: `80 photos — ${(settings.ceremonie_80 || 110000).toLocaleString("fr-FR")} FCFA` },
+    { value: `100 photos — ${(settings.ceremonie_100 || 125000).toLocaleString("fr-FR")} FCFA`,                label: `100 photos — ${(settings.ceremonie_100 || 125000).toLocaleString("fr-FR")} FCFA` },
+    { value: `120 photos — ${(settings.ceremonie_120 || 150000).toLocaleString("fr-FR")} FCFA`,                label: `120 photos — ${(settings.ceremonie_120 || 150000).toLocaleString("fr-FR")} FCFA` },
+    { value: `Pack Tak Diaka · 60 photos — ${(settings.ceremonie_tak_diaka || 85000).toLocaleString("fr-FR")} FCFA`, label: `Pack Tak Diaka · 60 photos — ${(settings.ceremonie_tak_diaka || 85000).toLocaleString("fr-FR")} FCFA` },
   ];
 
   const formulas = loc === "Studio" ? studioFormulas : loc === "Domicile" ? domicileFormulas : mariageFormulas;
