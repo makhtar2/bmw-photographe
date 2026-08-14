@@ -6,8 +6,6 @@ import Portfolio from "../components/Portfolio";
 import BookingForm from "../components/BookingForm";
 import { getDb } from "../lib/db";
 
-import TikTokFeed from "../components/TikTokFeed";
-
 export default async function Home() {
   const { settings, portfolio, promo } = await getDb();
 
@@ -354,9 +352,6 @@ export default async function Home() {
       <div id="portfolio" className="scroll-mt-24">
         <Portfolio images={portfolio} />
       </div>
-
-      {/* ════════ FLUX TIKTOK STREAM ════════ */}
-      <TikTokFeed />
 
       {/* ════════ RESERVATION SECTION ════════ */}
       <div id="reservation" className="scroll-mt-24">
