@@ -1280,10 +1280,11 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
 
         {/* ── ONGLET 4 : GRILLE TARIFAIRE ── */}
         {activeTab === "prices" && (
-          <div className="bg-white border border-slate-200 p-6 sm:p-8 rounded-2xl shadow-sm max-w-3xl mx-auto">
-            <div className="mb-6">
-              <span className="text-[11px] font-extrabold uppercase tracking-widest text-[--brand]">Tarifs</span>
+          <div className="bg-white border border-slate-200 p-4 sm:p-8 rounded-2xl shadow-sm w-full max-w-6xl mx-auto">
+            <div className="mb-6 border-b border-slate-100 pb-4">
+              <span className="text-[11px] font-extrabold uppercase tracking-widest text-[--brand]">Tarifs &amp; Gestion</span>
               <h3 className="text-2xl font-extrabold text-slate-900 mt-1">Grille Tarifaire du Studio</h3>
+              <p className="text-xs text-slate-500 font-semibold mt-1">Modifiez directement vos tarifs ci-dessous. Les changements s'appliquent instantanément sur le site.</p>
             </div>
 
             <form onSubmit={handleUpdatePrices} className="space-y-8">
@@ -1291,7 +1292,7 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
                 <h4 className="text-xs uppercase font-extrabold text-[--brand] tracking-wider border-b border-slate-100 pb-2">
                   En Studio
                 </h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                   {[
                     { key: "studio_5" as const, label: "5 photos" },
                     { key: "studio_7" as const, label: "7 photos" },
@@ -1322,7 +1323,7 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
                 <h4 className="text-xs uppercase font-extrabold text-blue-600 tracking-wider border-b border-slate-100 pb-2">
                   En Extérieur
                 </h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                   {[
                     { key: "exterieur_5" as const, label: "5 photos" },
                     { key: "exterieur_10" as const, label: "10 photos" },
@@ -1350,7 +1351,7 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
                 <h4 className="text-xs uppercase font-extrabold text-purple-600 tracking-wider border-b border-slate-100 pb-2">
                   Mariage &amp; Baptême
                 </h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                   {[
                     { key: "ceremonie_80" as const, label: "80 photos" },
                     { key: "ceremonie_100" as const, label: "100 photos" },
