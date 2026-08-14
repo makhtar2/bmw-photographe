@@ -38,10 +38,10 @@ export const metadata: Metadata = {
     siteName: "BMW Photographe",
     images: [
       {
-        url: "/camera-hero.png",
+        url: "/logo-square.png",
         width: 1200,
         height: 630,
-        alt: "BMW Photographe Studio Thiès",
+        alt: "BMW Photographe Logo Officiel",
       },
     ],
     locale: "fr_SN",
@@ -51,7 +51,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "BMW Photographe | Studio & Extérieur à Thiès",
     description: "Immortalisez vos plus beaux moments avec BMW Photographe à Thiès Médina Fall.",
-    images: ["/camera-hero.png"],
+    images: ["/logo-square.png"],
   },
   icons: {
     icon: "/logo-square.png",
