@@ -598,39 +598,43 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans pb-24 md:pb-12">
 
       {/* 1. HEADER ADMIN MOBILE & DESKTOP */}
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
+      {/* 1. HEADER ADMIN MOBILE & DESKTOP (ULTRA LUXURY DESIGN) */}
+      <header className="bg-slate-950/95 backdrop-blur-md border-b border-slate-800/80 sticky top-0 z-40 shadow-xl transition-all">
         <div className="max-w-7xl mx-auto px-4 sm:px-8 h-16 sm:h-20 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="relative w-28 sm:w-36 h-9 sm:h-10">
+            <div className="relative w-28 sm:w-36 h-9 sm:h-10 brightness-0 invert opacity-95">
               <Image src="/logo.png" alt="BMW Photographe Admin" fill className="object-contain object-left" priority />
             </div>
-            <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 bg-[--brand]/10 border border-[--brand]/20 rounded-full text-[11px] font-extrabold text-[--brand]">
-              <Sparkles className="w-3.5 h-3.5" /> Administration Studio
+            <span className="hidden md:inline-flex items-center gap-2 px-3 py-1 bg-amber-500/10 border border-amber-500/30 rounded-full text-[11px] font-extrabold text-amber-400 shadow-inner">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+              Studio Live
             </span>
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3">
-            {!pushEnabled ? (
-              <button
-                onClick={requestNotificationPermission}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 border border-amber-200 text-amber-800 text-[11px] font-extrabold rounded-xl hover:bg-amber-100 transition-all shadow-sm"
-                title="Activer les notifs"
-              >
-                <BellRing className="w-3.5 h-3.5 text-amber-600 animate-bounce" />
-                <span className="hidden sm:inline">Rappels</span>
-              </button>
-            ) : (
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-extrabold rounded-xl">
-                <Bell className="w-3 h-3 text-emerald-600" /> Notifs On
-              </span>
-            )}
+            <button
+              onClick={requestNotificationPermission}
+              className="relative p-2.5 bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 hover:text-white rounded-full transition-all cursor-pointer group active:scale-95"
+              title={pushEnabled ? "Notifications en direct activées" : "Activer les notifications instantanées"}
+            >
+              <Bell className="w-4 h-4 text-slate-300 group-hover:text-amber-400 transition-colors shrink-0" />
+              {pushEnabled ? (
+                <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-emerald-500 ring-2 ring-slate-950"></span>
+              ) : (
+                <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-amber-500 ring-2 ring-slate-950 animate-pulse"></span>
+              )}
+            </button>
 
             <button
               onClick={handleLogout}
-              className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 border border-slate-800 hover:bg-red-500/15 hover:border-red-500/40 hover:text-red-400 text-slate-300 text-[11px] font-extrabold rounded-full transition-all group cursor-pointer"
               title="Déconnexion"
             >
-              <LogOut className="w-5 h-5" />
+              <LogOut className="w-4 h-4 text-slate-400 group-hover:text-red-400 shrink-0" />
+              <span className="hidden sm:inline">Quitter</span>
             </button>
           </div>
         </div>
@@ -826,18 +830,20 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
                         target="_blank"
                         rel="noreferrer"
                         title="Ajouter à Google Calendar"
-                        className="py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-[11px] font-extrabold rounded-xl flex items-center justify-center gap-1.5 shadow-sm active:scale-95 transition-all"
+                        className="py-2.5 px-2 bg-slate-900 hover:bg-slate-800 text-white text-[11px] font-extrabold rounded-xl flex items-center justify-center gap-1.5 shadow-sm active:scale-95 transition-all min-w-0"
                       >
-                        <CalendarPlus className="w-4 h-4 text-[--brand]" /> Ajouter à Google Calendar
+                        <CalendarPlus className="w-4 h-4 text-[--brand] shrink-0" />
+                        <span className="truncate">Google Calendar</span>
                       </a>
 
                       <a
                         href={getWhatsAppReminderUrl(b)}
                         target="_blank"
                         rel="noreferrer"
-                        className="py-2.5 bg-emerald-600 text-white text-[11px] font-extrabold rounded-xl flex items-center justify-center gap-1.5 shadow-sm active:scale-95 transition-all"
+                        className="py-2.5 px-2 bg-emerald-600 text-white text-[11px] font-extrabold rounded-xl flex items-center justify-center gap-1.5 shadow-sm active:scale-95 transition-all min-w-0"
                       >
-                        <Send className="w-3.5 h-3.5" /> Rappel WhatsApp
+                        <Send className="w-3.5 h-3.5 shrink-0" />
+                        <span className="truncate">Rappel WhatsApp</span>
                       </a>
                     </div>
 
@@ -999,21 +1005,22 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
         {activeTab === "calendar" && (
           <div className="space-y-6">
             {/* Header Banner */}
-            <div className="bg-slate-900 text-white p-6 rounded-3xl shadow-lg border border-slate-800 flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="bg-slate-900 text-white p-4 sm:p-6 rounded-3xl shadow-lg border border-slate-800 flex flex-col md:flex-row items-center justify-between gap-4">
               <div className="space-y-1 text-center md:text-left">
-                <span className="text-[11px] font-extrabold uppercase tracking-widest text-[--brand]">Planning Studio</span>
-                <h3 className="text-xl font-extrabold text-white flex items-center justify-center md:justify-start gap-2">
-                  <CalendarIcon className="w-5 h-5 text-[--brand]" /> Agenda des Séances Photo
+                <span className="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-widest text-[--brand]">Planning Studio</span>
+                <h3 className="text-base sm:text-xl font-extrabold text-white flex items-center justify-center md:justify-start gap-2">
+                  <CalendarIcon className="w-5 h-5 text-[--brand] shrink-0" /> Agenda des Séances Photo
                 </h3>
-                <p className="text-xs text-slate-400 font-semibold">Visualisez votre calendrier mensuel ou basculez en vue chronologique.</p>
+                <p className="text-[11px] sm:text-xs text-slate-400 font-semibold">Visualisez votre calendrier mensuel ou vue chronologique.</p>
               </div>
 
               <div className="flex items-center gap-3 w-full md:w-auto">
                 <button
                   onClick={openAddBookingModal}
-                  className="w-full md:w-auto bg-[--brand] text-white px-5 py-3 rounded-2xl text-xs font-extrabold uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-white hover:text-slate-900 transition-all shadow-md active:scale-95"
+                  className="w-full md:w-auto bg-[--brand] text-white px-4 py-2.5 sm:px-5 sm:py-3 rounded-2xl text-xs font-extrabold uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-white hover:text-slate-900 transition-all shadow-md active:scale-95 min-w-0"
                 >
-                  <Plus className="w-4 h-4" /> Planifier un Rendez-vous
+                  <Plus className="w-4 h-4 shrink-0" />
+                  <span className="truncate">Planifier un Rendez-vous</span>
                 </button>
               </div>
             </div>
@@ -1197,18 +1204,20 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
                         href={getGoogleCalendarUrl(b)}
                         target="_blank"
                         rel="noreferrer"
-                        className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition-all shadow-md active:scale-95"
+                        className="w-full py-2.5 px-3 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition-all shadow-md active:scale-95 min-w-0"
                       >
-                        <CalendarPlus className="w-4 h-4 text-[--brand]" /> Ajouter à Google Calendar
+                        <CalendarPlus className="w-4 h-4 text-[--brand] shrink-0" />
+                        <span className="truncate">Google Calendar</span>
                       </a>
 
                       <a
                         href={getWhatsAppReminderUrl(b)}
                         target="_blank"
                         rel="noreferrer"
-                        className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition-all shadow-sm active:scale-95"
+                        className="w-full py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition-all shadow-sm active:scale-95 min-w-0"
                       >
-                        <Send className="w-3.5 h-3.5" /> Rappel WhatsApp Client
+                        <Send className="w-3.5 h-3.5 shrink-0" />
+                        <span className="truncate">Rappel WhatsApp Client</span>
                       </a>
                     </div>
                   </div>
@@ -1221,19 +1230,20 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
         {/* ── ONGLET 3 : PORTFOLIO CLOUDINARY ── */}
         {activeTab === "portfolio" && (
           <div className="space-y-6">
-            <div className="flex items-center justify-between bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
               <div>
                 <h3 className="font-extrabold text-base text-slate-900 flex items-center gap-2">
-                  <ImageIcon className="w-5 h-5 text-[--brand]" /> Portfolio ({portfolio.length})
+                  <ImageIcon className="w-5 h-5 text-[--brand] shrink-0" /> Portfolio ({portfolio.length})
                 </h3>
-                <p className="text-xs text-slate-500 font-semibold">Gérez et organisez les photographies de votre galerie professionnelle.</p>
+                <p className="text-[11px] sm:text-xs text-slate-500 font-semibold mt-0.5">Gérez et organisez votre galerie photo.</p>
               </div>
 
               <button
                 onClick={openAddPhotoModal}
-                className="bg-[--brand] text-white px-4 py-2.5 rounded-xl text-xs font-extrabold uppercase tracking-wider flex items-center gap-1.5 hover:bg-slate-900 shadow-md transition-all shrink-0"
+                className="w-full sm:w-auto bg-[--brand] text-white px-4 py-2.5 rounded-xl text-xs font-extrabold uppercase tracking-wider flex items-center justify-center gap-1.5 hover:bg-slate-900 shadow-md transition-all shrink-0 min-w-0"
               >
-                <Plus className="w-4 h-4" /> Ajouter une photo
+                <Plus className="w-4 h-4 shrink-0" />
+                <span className="truncate">Ajouter une photo</span>
               </button>
             </div>
 
@@ -1381,9 +1391,9 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
               <button
                 type="submit"
                 disabled={isPending}
-                className="w-full py-3.5 bg-slate-900 text-white hover:bg-[--brand] transition-all rounded-xl text-xs uppercase tracking-widest font-extrabold flex items-center justify-center gap-2 shadow-md disabled:opacity-50"
+                className="w-full py-3.5 px-4 bg-slate-900 text-white hover:bg-[--brand] transition-all rounded-xl text-xs uppercase tracking-widest font-extrabold flex items-center justify-center gap-2 shadow-md disabled:opacity-50 min-w-0"
               >
-                Enregistrer la grille tarifaire
+                <span className="truncate">Enregistrer la grille tarifaire</span>
               </button>
             </form>
 
@@ -1496,9 +1506,10 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
                 <button
                   type="submit"
                   disabled={isPending}
-                  className="w-full py-3.5 bg-[--brand] text-white hover:bg-slate-900 transition-all rounded-xl text-xs uppercase tracking-wider font-extrabold flex items-center justify-center gap-2 shadow-md disabled:opacity-50"
+                  className="w-full py-3.5 px-4 bg-[--brand] text-white hover:bg-slate-900 transition-all rounded-xl text-xs uppercase tracking-wider font-extrabold flex items-center justify-center gap-2 shadow-md disabled:opacity-50 min-w-0"
                 >
-                  <Tag className="w-4 h-4" /> Enregistrer la Promo Événementielle
+                  <Tag className="w-4 h-4 shrink-0" />
+                  <span className="truncate">Enregistrer l'Offre Promo</span>
                 </button>
               </form>
 
