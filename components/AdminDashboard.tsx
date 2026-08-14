@@ -1442,15 +1442,17 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                     {[
-                      { key: "studio_5" as const, label: "Studio 5 photos (Normal: " + settings.studio_5 + " FCFA)" },
-                      { key: "studio_7" as const, label: "Studio 7 photos (Normal: " + settings.studio_7 + " FCFA)" },
-                      { key: "studio_10" as const, label: "Studio 10 photos (Normal: " + settings.studio_10 + " FCFA)" },
-                      { key: "studio_15" as const, label: "Studio 15 photos (Normal: " + settings.studio_15 + " FCFA)" },
-                      { key: "studio_20" as const, label: "Studio 20 photos (Normal: " + settings.studio_20 + " FCFA)" },
-                      { key: "exterieur_5" as const, label: "Extérieur 5 photos (Normal: " + settings.exterieur_5 + " FCFA)" },
-                      { key: "exterieur_10" as const, label: "Extérieur 10 photos (Normal: " + settings.exterieur_10 + " FCFA)" },
-                      { key: "ceremonie_80" as const, label: "Mariage 80 photos (Normal: " + settings.ceremonie_80 + " FCFA)" },
-                      { key: "ceremonie_tak_diaka" as const, label: "Tak Diaka (Normal: " + settings.ceremonie_tak_diaka + " FCFA)" },
+                      { key: "studio_5" as const, label: `Studio 5 photos (Normal: ${(settings.studio_5 || 10000).toLocaleString("fr-FR")} FCFA)` },
+                      { key: "studio_7" as const, label: `Studio 7 photos (Normal: ${(settings.studio_7 || 15000).toLocaleString("fr-FR")} FCFA)` },
+                      { key: "studio_10" as const, label: `Studio 10 photos (Normal: ${(settings.studio_10 || 20000).toLocaleString("fr-FR")} FCFA)` },
+                      { key: "studio_15" as const, label: `Studio 15 photos (Normal: ${(settings.studio_15 || 30000).toLocaleString("fr-FR")} FCFA)` },
+                      { key: "studio_20" as const, label: `Studio 20 photos (Normal: ${(settings.studio_20 || 50000).toLocaleString("fr-FR")} FCFA)` },
+                      { key: "exterieur_5" as const, label: `Extérieur 5 photos (Normal: ${(settings.exterieur_5 || 25000).toLocaleString("fr-FR")} FCFA)` },
+                      { key: "exterieur_10" as const, label: `Extérieur 10 photos (Normal: ${(settings.exterieur_10 || 40000).toLocaleString("fr-FR")} FCFA)` },
+                      { key: "ceremonie_80" as const, label: `Mariage 80 photos (Normal: ${(settings.ceremonie_80 || 110000).toLocaleString("fr-FR")} FCFA)` },
+                      { key: "ceremonie_100" as const, label: `Mariage 100 photos (Normal: ${(settings.ceremonie_100 || 125000).toLocaleString("fr-FR")} FCFA)` },
+                      { key: "ceremonie_120" as const, label: `Mariage 120 photos (Normal: ${(settings.ceremonie_120 || 150000).toLocaleString("fr-FR")} FCFA)` },
+                      { key: "ceremonie_tak_diaka" as const, label: `Tak Diaka (Normal: ${(settings.ceremonie_tak_diaka || 85000).toLocaleString("fr-FR")} FCFA)` },
                     ].map(({ key, label }) => (
                       <div key={key}>
                         <label className="block text-[11px] font-extrabold text-slate-600 mb-1">{label}</label>
