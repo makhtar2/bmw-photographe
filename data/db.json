@@ -1,0 +1,125 @@
+{
+  "settings": {
+    "studio_5": 10000,
+    "studio_7": 15000,
+    "studio_10": 20000,
+    "studio_15": 30000,
+    "studio_20": 50000,
+    "exterieur_5": 25000,
+    "exterieur_10": 40000,
+    "ceremonie_80": 110000,
+    "ceremonie_100": 125000,
+    "ceremonie_120": 150000,
+    "ceremonie_tak_diaka": 85000,
+    "option_video": 15000
+  },
+  "portfolio": [
+    {
+      "id": 1,
+      "src": "/portfolio/real1.png",
+      "alt": "Portrait élégance traditionnelle blanche par BMW Photographe",
+      "category": "studio",
+      "aspectClass": "aspect-[3/4]",
+      "title": "Élégance Blanche"
+    },
+    {
+      "id": 2,
+      "src": "/portfolio/real2.png",
+      "alt": "Séance couple en tenues traditionnelles par BMW Photographe",
+      "category": "studio",
+      "aspectClass": "aspect-[3/4]",
+      "title": "Couple Tradition"
+    },
+    {
+      "id": 3,
+      "src": "/portfolio/real3.png",
+      "alt": "Séance portrait éclat traditionnel bleu par BMW Photographe",
+      "category": "studio",
+      "aspectClass": "aspect-[3/4]",
+      "title": "Éclat Bleu & Or"
+    },
+    {
+      "id": 4,
+      "src": "/portfolio/real4.png",
+      "alt": "Portrait homme en kaftan noir par BMW Photographe",
+      "category": "exterior",
+      "aspectClass": "aspect-[2/3]",
+      "title": "Homme Kaftan Noir"
+    },
+    {
+      "id": 5,
+      "src": "/portfolio/real5.png",
+      "alt": "Robe traditionnelle mariage rouge par BMW Photographe",
+      "category": "studio",
+      "aspectClass": "aspect-[3/4]",
+      "title": "Mariage Royal Rouge"
+    },
+    {
+      "id": 6,
+      "src": "/portfolio/real6.png",
+      "alt": "Robe de mariée blanche en dentelle par BMW Photographe",
+      "category": "exterior",
+      "aspectClass": "aspect-[2/3]",
+      "title": "Robe de Mariée Dentelle"
+    },
+    {
+      "id": 7,
+      "src": "/portfolio/real7.png",
+      "alt": "Séance de préparation en peignoir par BMW Photographe",
+      "category": "studio",
+      "aspectClass": "aspect-[3/4]",
+      "title": "Préparatifs Beauté"
+    },
+    {
+      "id": 8,
+      "src": "/portfolio/real8.png",
+      "alt": "Détails henne et alliances par BMW Photographe",
+      "category": "studio",
+      "aspectClass": "aspect-square",
+      "title": "Détails Henné"
+    },
+    {
+      "id": 9,
+      "src": "/portfolio/real9.png",
+      "alt": "Mariée voilée en tenue de noces par BMW Photographe",
+      "category": "studio",
+      "aspectClass": "aspect-[3/4]",
+      "title": "Le Voile Blanc"
+    },
+    {
+      "id": 10,
+      "src": "/portfolio/real10.png",
+      "alt": "Émotion et recueillement de la mariée par BMW Photographe",
+      "category": "studio",
+      "aspectClass": "aspect-[3/4]",
+      "title": "Émotion & Regard"
+    },
+    {
+      "id": 11,
+      "src": "/portfolio/real11.png",
+      "alt": "Portrait souriant en voile noir et rouge par BMW Photographe",
+      "category": "exterior",
+      "aspectClass": "aspect-[2/3]",
+      "title": "Sourire & Tradition"
+    },
+    {
+      "id": 12,
+      "src": "/portfolio/real12.png",
+      "alt": "Complicité et éclats de rire du couple par BMW Photographe",
+      "category": "studio",
+      "aspectClass": "aspect-[3/4]",
+      "title": "Complicité de Couple"
+    }
+  ],
+  "bookings": [
+    {
+      "id": "3A85E",
+      "name": "WADE",
+      "phone": "754469097",
+      "location": "Studio",
+      "formula": "5 photos — 10 000 F",
+      "status": "En attente",
+      "createdAt": "2026-08-14T01:01:44.630Z"
+    }
+  ]
+}
