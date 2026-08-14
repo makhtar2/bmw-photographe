@@ -222,30 +222,48 @@ async function initAssets() {
   }
 }
 
+const TMP_DB_FILE = path.join("/tmp", "bmw_db.json");
+
 // Lire la base de données
 export async function getDb(): Promise<Database> {
-  // S'assurer que le dossier data et les assets existent
-  await fs.mkdir(path.dirname(DB_FILE), { recursive: true });
   await initAssets();
   
+  // 1. Essayer de lire depuis /tmp (pour la persistance Vercel serverless)
   try {
-    const data = await fs.readFile(DB_FILE, "utf-8");
-    return JSON.parse(data);
-  } catch (e) {
-    // Fichier inexistant, écrire la base par défaut
-    await writeDb(defaultDatabase);
-    return defaultDatabase;
+    const tmpData = await fs.readFile(TMP_DB_FILE, "utf-8");
+    return JSON.parse(tmpData);
+  } catch {
+    // 2. Sinon lire depuis le fichier initial data/db.json
+    try {
+      const data = await fs.readFile(DB_FILE, "utf-8");
+      return JSON.parse(data);
+    } catch {
+      return defaultDatabase;
+    }
   }
 }
 
 // Écrire dans la base de données
 export async function writeDb(db: Database): Promise<boolean> {
+  const content = JSON.stringify(db, null, 2);
+  let saved = false;
+
+  // 1. Écrire dans /tmp (toujours autorisé sur Vercel serverless)
+  try {
+    await fs.writeFile(TMP_DB_FILE, content, "utf-8");
+    saved = true;
+  } catch (err) {
+    console.error("[WriteDb /tmp Error]", err);
+  }
+
+  // 2. Écrire dans data/db.json (dev local)
   try {
     await fs.mkdir(path.dirname(DB_FILE), { recursive: true });
-    await fs.writeFile(DB_FILE, JSON.stringify(db, null, 2), "utf-8");
-    return true;
-  } catch (err) {
-    console.error("Erreur lors de l'écriture de la base de données:", err);
-    return false;
+    await fs.writeFile(DB_FILE, content, "utf-8");
+    saved = true;
+  } catch {
+    // Système de fichier en lecture seule sur Vercel production
   }
+
+  return saved;
 }

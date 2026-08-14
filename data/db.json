@@ -132,7 +132,7 @@
     }
   ],
   "promo": {
-    "enabled": false,
+    "enabled": true,
     "eventName": "Spécial Gamou",
     "subtitle": "Profitez de réductions exclusives sur vos séances photo pour le Gamou !",
     "badgeText": "PROMO GAMOU",
