@@ -330,12 +330,29 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
     window.location.reload();
   };
 
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const cachedSettings = localStorage.getItem("bmw_custom_settings");
+      if (cachedSettings) {
+        try {
+          const parsed = JSON.parse(cachedSettings);
+          if (parsed && typeof parsed === "object") {
+            setSettings(prev => ({ ...prev, ...parsed }));
+          }
+        } catch {}
+      }
+    }
+  }, []);
+
   const handleUpdatePrices = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (typeof window !== "undefined") {
+      localStorage.setItem("bmw_custom_settings", JSON.stringify(settings));
+    }
     startTransition(async () => {
       const res = await updatePricesSettings(settings);
       if (res.success) {
-        triggerNotification("success", "Tarifs mis à jour !");
+        triggerNotification("success", "Tarifs enregistrés et mis à jour !");
       } else {
         triggerNotification("error", res.message || "Erreur de mise à jour");
       }

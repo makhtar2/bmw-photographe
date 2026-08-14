@@ -222,22 +222,35 @@ async function initAssets() {
   }
 }
 
+declare global {
+  var _bmw_db_cache: Database | undefined;
+}
+
 const TMP_DB_FILE = path.join("/tmp", "bmw_db.json");
 
 // Lire la base de données
 export async function getDb(): Promise<Database> {
   await initAssets();
-  
+
+  if (globalThis._bmw_db_cache) {
+    return globalThis._bmw_db_cache;
+  }
+
   // 1. Essayer de lire depuis /tmp (pour la persistance Vercel serverless)
   try {
     const tmpData = await fs.readFile(TMP_DB_FILE, "utf-8");
-    return JSON.parse(tmpData);
+    const parsed = JSON.parse(tmpData);
+    globalThis._bmw_db_cache = parsed;
+    return parsed;
   } catch {
     // 2. Sinon lire depuis le fichier initial data/db.json
     try {
       const data = await fs.readFile(DB_FILE, "utf-8");
-      return JSON.parse(data);
+      const parsed = JSON.parse(data);
+      globalThis._bmw_db_cache = parsed;
+      return parsed;
     } catch {
+      globalThis._bmw_db_cache = defaultDatabase;
       return defaultDatabase;
     }
   }
@@ -245,6 +258,7 @@ export async function getDb(): Promise<Database> {
 
 // Écrire dans la base de données
 export async function writeDb(db: Database): Promise<boolean> {
+  globalThis._bmw_db_cache = db;
   const content = JSON.stringify(db, null, 2);
   let saved = false;
 

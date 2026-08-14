@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { bookingSchema, BookingInput } from "../lib/schema";
@@ -17,6 +17,22 @@ export default function BookingForm({ settings, id = "reservation" }: BookingFor
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
+  const [activeSettings, setActiveSettings] = useState<PricesSettings>(settings);
+
+  useEffect(() => {
+    setActiveSettings(settings);
+    if (typeof window !== "undefined") {
+      const cached = localStorage.getItem("bmw_custom_settings");
+      if (cached) {
+        try {
+          const parsed = JSON.parse(cached);
+          if (parsed && typeof parsed === "object") {
+            setActiveSettings(prev => ({ ...prev, ...parsed }));
+          }
+        } catch {}
+      }
+    }
+  }, [settings]);
 
   const {
     register,
@@ -31,23 +47,23 @@ export default function BookingForm({ settings, id = "reservation" }: BookingFor
   const loc = watch("location");
 
   const studioFormulas = [
-    { value: `5 photos — ${(settings.studio_5 || 10000).toLocaleString("fr-FR")} FCFA`,  label: `5 photos — ${(settings.studio_5 || 10000).toLocaleString("fr-FR")} FCFA` },
-    { value: `7 photos — ${(settings.studio_7 || 15000).toLocaleString("fr-FR")} FCFA`,  label: `7 photos — ${(settings.studio_7 || 15000).toLocaleString("fr-FR")} FCFA` },
-    { value: `10 photos — ${(settings.studio_10 || 20000).toLocaleString("fr-FR")} FCFA`, label: `10 photos — ${(settings.studio_10 || 20000).toLocaleString("fr-FR")} FCFA` },
-    { value: `15 photos — ${(settings.studio_15 || 30000).toLocaleString("fr-FR")} FCFA`, label: `15 photos — ${(settings.studio_15 || 30000).toLocaleString("fr-FR")} FCFA` },
-    { value: `20 photos — ${(settings.studio_20 || 50000).toLocaleString("fr-FR")} FCFA`, label: `20 photos — ${(settings.studio_20 || 50000).toLocaleString("fr-FR")} FCFA` },
+    { value: `5 photos — ${(activeSettings.studio_5 || 10000).toLocaleString("fr-FR")} FCFA`,  label: `5 photos — ${(activeSettings.studio_5 || 10000).toLocaleString("fr-FR")} FCFA` },
+    { value: `7 photos — ${(activeSettings.studio_7 || 15000).toLocaleString("fr-FR")} FCFA`,  label: `7 photos — ${(activeSettings.studio_7 || 15000).toLocaleString("fr-FR")} FCFA` },
+    { value: `10 photos — ${(activeSettings.studio_10 || 20000).toLocaleString("fr-FR")} FCFA`, label: `10 photos — ${(activeSettings.studio_10 || 20000).toLocaleString("fr-FR")} FCFA` },
+    { value: `15 photos — ${(activeSettings.studio_15 || 30000).toLocaleString("fr-FR")} FCFA`, label: `15 photos — ${(activeSettings.studio_15 || 30000).toLocaleString("fr-FR")} FCFA` },
+    { value: `20 photos — ${(activeSettings.studio_20 || 50000).toLocaleString("fr-FR")} FCFA`, label: `20 photos — ${(activeSettings.studio_20 || 50000).toLocaleString("fr-FR")} FCFA` },
   ];
 
   const domicileFormulas = [
-    { value: `5 photos — ${(settings.exterieur_5 || 25000).toLocaleString("fr-FR")} FCFA`,  label: `5 photos — ${(settings.exterieur_5 || 25000).toLocaleString("fr-FR")} FCFA` },
-    { value: `10 photos — ${(settings.exterieur_10 || 40000).toLocaleString("fr-FR")} FCFA`, label: `10 photos — ${(settings.exterieur_10 || 40000).toLocaleString("fr-FR")} FCFA` },
+    { value: `5 photos — ${(activeSettings.exterieur_5 || 25000).toLocaleString("fr-FR")} FCFA`,  label: `5 photos — ${(activeSettings.exterieur_5 || 25000).toLocaleString("fr-FR")} FCFA` },
+    { value: `10 photos — ${(activeSettings.exterieur_10 || 40000).toLocaleString("fr-FR")} FCFA`, label: `10 photos — ${(activeSettings.exterieur_10 || 40000).toLocaleString("fr-FR")} FCFA` },
   ];
 
   const mariageFormulas = [
-    { value: `80 photos — ${(settings.ceremonie_80 || 110000).toLocaleString("fr-FR")} FCFA`,                 label: `80 photos — ${(settings.ceremonie_80 || 110000).toLocaleString("fr-FR")} FCFA` },
-    { value: `100 photos — ${(settings.ceremonie_100 || 125000).toLocaleString("fr-FR")} FCFA`,                label: `100 photos — ${(settings.ceremonie_100 || 125000).toLocaleString("fr-FR")} FCFA` },
-    { value: `120 photos — ${(settings.ceremonie_120 || 150000).toLocaleString("fr-FR")} FCFA`,                label: `120 photos — ${(settings.ceremonie_120 || 150000).toLocaleString("fr-FR")} FCFA` },
-    { value: `Pack Tak Diaka · 60 photos — ${(settings.ceremonie_tak_diaka || 85000).toLocaleString("fr-FR")} FCFA`, label: `Pack Tak Diaka · 60 photos — ${(settings.ceremonie_tak_diaka || 85000).toLocaleString("fr-FR")} FCFA` },
+    { value: `80 photos — ${(activeSettings.ceremonie_80 || 110000).toLocaleString("fr-FR")} FCFA`,                 label: `80 photos — ${(activeSettings.ceremonie_80 || 110000).toLocaleString("fr-FR")} FCFA` },
+    { value: `100 photos — ${(activeSettings.ceremonie_100 || 125000).toLocaleString("fr-FR")} FCFA`,                label: `100 photos — ${(activeSettings.ceremonie_100 || 125000).toLocaleString("fr-FR")} FCFA` },
+    { value: `120 photos — ${(activeSettings.ceremonie_120 || 150000).toLocaleString("fr-FR")} FCFA`,                label: `120 photos — ${(activeSettings.ceremonie_120 || 150000).toLocaleString("fr-FR")} FCFA` },
+    { value: `Pack Tak Diaka · 60 photos — ${(activeSettings.ceremonie_tak_diaka || 85000).toLocaleString("fr-FR")} FCFA`, label: `Pack Tak Diaka · 60 photos — ${(activeSettings.ceremonie_tak_diaka || 85000).toLocaleString("fr-FR")} FCFA` },
   ];
 
   const formulas = loc === "Studio" ? studioFormulas : loc === "Domicile" ? domicileFormulas : mariageFormulas;
