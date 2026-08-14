@@ -290,8 +290,6 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
 
       lastBookingCountRef.current = data.bookings.length;
       setBookings(data.bookings);
-      setSettings(data.settings);
-      setPortfolio(data.portfolio);
     } catch (e) { }
   }, []);
 
