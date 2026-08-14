@@ -1,7 +1,7 @@
 "use server";
 
 import { bookingSchema, BookingInput } from "../lib/schema";
-import { getDb, writeDb, Booking, PricesSettings, PortfolioItem } from "../lib/db";
+import { getDb, writeDb, Booking, PricesSettings, PortfolioItem, EventPromo } from "../lib/db";
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 
@@ -34,12 +34,12 @@ export async function submitBooking(data: BookingInput): Promise<ActionState> {
   await writeDb(db);
 
   const whatsappPhone = "221762588808";
-  const message = `Salam, je suis ${v.name}.
-Je veux réserver : ${v.formula}
-Lieu : ${v.location}
-Mon numéro : ${v.phone}
+  const message = `Bonjour, c'est ${v.name}.
 
-Voici la capture de mon paiement 👇`;
+Je souhaite réserver la formule : ${v.formula} (${v.location}).
+Mon téléphone : ${v.phone}.
+
+Ci-joint le reçu de mon paiement d'acompte.`;
 
   const whatsappUrl = `https://wa.me/${whatsappPhone}?text=${encodeURIComponent(message)}`;
 
@@ -112,6 +112,42 @@ export async function updateBookingStatus(id: string, status: Booking["status"])
   }
 }
 
+export async function addBookingAdmin(data: Omit<Booking, "id"|"createdAt">): Promise<{ success: boolean; message?: string; id?: string }> {
+  try {
+    await ensureAdminAuth();
+    const db = await getDb();
+    const newId = Math.random().toString(36).substring(2, 7).toUpperCase();
+    const newBooking: Booking = {
+      id: newId,
+      ...data,
+      createdAt: new Date().toISOString(),
+    };
+    db.bookings.unshift(newBooking);
+    await writeDb(db);
+    revalidatePath("/admin");
+    return { success: true, message: "Réservation ajoutée", id: newId };
+  } catch (e: any) {
+    return { success: false, message: e.message };
+  }
+}
+
+export async function updateBookingFull(id: string, data: Omit<Booking, "id"|"createdAt">): Promise<{ success: boolean; message?: string }> {
+  try {
+    await ensureAdminAuth();
+    const db = await getDb();
+    const i = db.bookings.findIndex((b) => b.id === id);
+    if (i !== -1) {
+      db.bookings[i] = { ...db.bookings[i], ...data };
+      await writeDb(db);
+      revalidatePath("/admin");
+      return { success: true, message: "Réservation modifiée avec succès" };
+    }
+    return { success: false, message: "Introuvable" };
+  } catch (e: any) {
+    return { success: false, message: e.message };
+  }
+}
+
 export async function deleteBooking(id: string): Promise<{ success: boolean; message?: string }> {
   try {
     await ensureAdminAuth();
@@ -168,6 +204,22 @@ export async function updatePortfolioItem(id: number, item: Partial<Omit<Portfol
       return { success: true, message: "Photo mise à jour" };
     }
     return { success: false, message: "Photo introuvable" };
+  } catch (e: any) {
+    return { success: false, message: e.message };
+  }
+}
+
+// ── PROMO EXCLUSIVE (ADMIN) ──
+export async function updatePromoOffer(promo: EventPromo): Promise<{ success: boolean; message?: string }> {
+  try {
+    await ensureAdminAuth();
+    const db = await getDb();
+    db.promo = promo;
+    await writeDb(db);
+    revalidatePath("/");
+    revalidatePath("/admin");
+    revalidatePath("/admin/tarifs");
+    return { success: true, message: "Offre promo mise à jour" };
   } catch (e: any) {
     return { success: false, message: e.message };
   }

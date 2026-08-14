@@ -39,21 +39,15 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Stratégie de cache : Cache First, fallback Network
+// Stratégie de cache : Network First (Priorité au Réseau pour voir immédiatement les modifs)
 self.addEventListener('fetch', (event) => {
-  // Ignorer les requêtes non-GET et les requêtes vers l'admin ou les serveurs tiers (ex: WhatsApp, analytics)
   if (event.request.method !== 'GET' || event.request.url.includes('/admin') || event.request.url.includes('/api/')) {
     return;
   }
 
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
-      
-      return fetch(event.request).then((networkResponse) => {
-        // Mettre en cache les nouvelles requêtes d'images ou d'assets
+    fetch(event.request)
+      .then((networkResponse) => {
         if (
           networkResponse && 
           networkResponse.status === 200 && 
@@ -65,10 +59,12 @@ self.addEventListener('fetch', (event) => {
           });
         }
         return networkResponse;
-      }).catch(() => {
-        // En cas de panne de réseau hors ligne
-        return new Response('Hors ligne');
-      });
-    })
+      })
+      .catch(() => {
+        // En cas de panne de réseau hors ligne : fallback vers le cache
+        return caches.match(event.request).then((cachedResponse) => {
+          return cachedResponse || new Response('Hors ligne');
+        });
+      })
   );
 });

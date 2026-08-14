@@ -7,10 +7,43 @@ import BookingForm from "../components/BookingForm";
 import { getDb } from "../lib/db";
 
 export default async function Home() {
-  const { settings, portfolio } = await getDb();
+  const { settings, portfolio, promo } = await getDb();
 
   return (
     <main className="min-h-screen bg-slate-50">
+      {/* ════════ BANNIÈRE DÉFILANTE OR DEGRADÉ AVEC BOUTON STATIQUE ════════ */}
+      {promo?.enabled && (
+        <div className="bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500 text-slate-950 sticky top-0 z-50 py-2.5 px-4 shadow-md border-b border-amber-400/40 select-none flex items-center justify-between gap-3 overflow-hidden">
+          {/* Zone défilante sous le bouton */}
+          <div className="overflow-hidden flex-1 relative">
+            <div className="animate-marquee font-extrabold text-[12px] uppercase tracking-widest text-slate-950">
+              <span className="inline-flex items-center gap-8 pr-8">
+                <span>✨ <strong>[{promo.badgeText}]</strong> {promo.eventName} — {promo.subtitle} ✨</span>
+                <span>•</span>
+                <span>✨ <strong>[{promo.badgeText}]</strong> {promo.eventName} — {promo.subtitle} ✨</span>
+                <span>•</span>
+              </span>
+              <span className="inline-flex items-center gap-8 pr-8">
+                <span>✨ <strong>[{promo.badgeText}]</strong> {promo.eventName} — {promo.subtitle} ✨</span>
+                <span>•</span>
+                <span>✨ <strong>[{promo.badgeText}]</strong> {promo.eventName} — {promo.subtitle} ✨</span>
+                <span>•</span>
+              </span>
+            </div>
+          </div>
+
+          {/* Bouton Fixe / Statique à droite */}
+          <div className="flex-shrink-0 z-10">
+            <a 
+              href="#tarifs" 
+              className="bg-slate-950 text-amber-300 hover:bg-white hover:text-slate-950 font-black text-[10px] sm:text-[11px] px-3.5 py-1.5 rounded-full uppercase tracking-wider shadow-md transition-all whitespace-nowrap block"
+            >
+              Voir les Prix Promos
+            </a>
+          </div>
+        </div>
+      )}
+
       <Navbar />
 
       {/* ════════ FLOATING RDV BUTTON (Mobile only) ════════ */}
@@ -29,7 +62,7 @@ export default async function Home() {
         <header className="px-4 py-10 sm:px-6 md:px-10 md:py-20">
           <div className="mx-auto grid max-w-6xl items-center gap-10 lg:grid-cols-2">
             
-            <div className="order-2 space-y-6 lg:order-1">
+            <div className="order-2 space-y-6 lg:order-1 flex flex-col items-center lg:items-start text-center lg:text-left">
               <div className="relative w-80 sm:w-96 h-28 sm:h-32 mx-auto lg:mx-0">
                 <Image 
                   src="/logo.png" 
@@ -40,8 +73,13 @@ export default async function Home() {
                 />
               </div>
               
-              <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-[11px] font-extrabold uppercase tracking-wider text-slate-700">
-                <MaterialIcon name="photo_camera" className="text-[--brand] text-base" /> Photographe à Thiès
+              <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-2.5 w-full">
+                <div className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-[11px] font-extrabold uppercase tracking-wider text-slate-700 shadow-sm">
+                  <MaterialIcon name="photo_camera" className="text-[--brand] text-base" /> Photographe à Thiès
+                </div>
+                <div className="inline-flex items-center justify-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-[11px] font-extrabold uppercase tracking-wider text-amber-900 shadow-sm">
+                  <MaterialIcon name="place" className="text-[--brand] text-base" /> Disponible partout au Sénégal
+                </div>
               </div>
               
               <h1 className="text-4xl font-extrabold leading-tight tracking-tight text-slate-900 sm:text-5xl">
@@ -49,8 +87,8 @@ export default async function Home() {
                 <span className="text-[--brand]">en lumière.</span>
               </h1>
               
-              <p className="max-w-xl text-base font-semibold leading-relaxed text-slate-600">
-                Des portraits sensibles et affirmés, pensés pour révéler votre présence — en studio, en extérieur et lors de vos grands moments à Thiès.
+              <p className="max-w-xl text-base font-semibold leading-relaxed text-slate-600 mx-auto lg:mx-0">
+                Des portraits sensibles et affirmés, pensés pour révéler votre présence — en studio, en extérieur et lors de vos grands moments à Thiès et sur l'ensemble du Sénégal.
               </p>
               
               <div className="flex flex-col gap-3 sm:flex-row">
@@ -173,47 +211,92 @@ export default async function Home() {
             {/* Studio + Extérieur */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
               {/* En studio */}
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-6">
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-6 relative overflow-hidden">
+                {promo?.enabled && (
+                  <span className="absolute top-3 right-3 bg-[--brand] text-white text-[9px] font-extrabold px-2.5 py-1 rounded-full uppercase tracking-wider">
+                    {promo.badgeText}
+                  </span>
+                )}
                 <h3 className="text-base font-extrabold text-slate-900 uppercase tracking-wide mb-5">En studio</h3>
                 <div className="space-y-3">
                   {[
-                    { label: "5 photos",  price: settings.studio_5 },
-                    { label: "7 photos",  price: settings.studio_7 },
-                    { label: "10 photos", price: settings.studio_10 },
-                    { label: "15 photos", price: settings.studio_15 },
-                    { label: "20 photos", price: settings.studio_20 },
-                  ].map((row) => (
-                    <div key={row.label} className="flex items-center justify-between border-b border-slate-200 pb-3 last:border-0 last:pb-0">
-                      <span className="text-sm font-semibold text-slate-600">{row.label}</span>
-                      <strong className="text-sm font-extrabold text-slate-900">
-                        {row.price.toLocaleString("fr-FR")} <small className="font-bold text-slate-400 text-[11px]">FCFA</small>
-                      </strong>
-                    </div>
-                  ))}
+                    { key: "studio_5" as const,  label: "5 photos",  price: settings.studio_5 },
+                    { key: "studio_7" as const,  label: "7 photos",  price: settings.studio_7 },
+                    { key: "studio_10" as const, label: "10 photos", price: settings.studio_10 },
+                    { key: "studio_15" as const, label: "15 photos", price: settings.studio_15 },
+                    { key: "studio_20" as const, label: "20 photos", price: settings.studio_20 },
+                  ].map((row) => {
+                    const promoVal = promo?.enabled ? promo.promoPrices[row.key] : undefined;
+                    const hasDiscount = promoVal && promoVal < row.price;
+                    return (
+                      <div key={row.label} className="flex items-center justify-between border-b border-slate-200 pb-3 last:border-0 last:pb-0">
+                        <span className="text-sm font-semibold text-slate-600">{row.label}</span>
+                        <div>
+                          {hasDiscount ? (
+                            <>
+                              <del className="text-xs font-bold text-slate-400 mr-2">{row.price.toLocaleString("fr-FR")} FCFA</del>
+                              <strong className="text-sm font-extrabold text-[--brand]">
+                                {promoVal.toLocaleString("fr-FR")} <small className="font-bold text-slate-400 text-[11px]">FCFA</small>
+                              </strong>
+                            </>
+                          ) : (
+                            <strong className="text-sm font-extrabold text-slate-900">
+                              {row.price.toLocaleString("fr-FR")} <small className="font-bold text-slate-400 text-[11px]">FCFA</small>
+                            </strong>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 
               {/* En extérieur */}
-              <div className="rounded-2xl border border-[--brand]/30 bg-[--brand]/5 p-6">
+              <div className="rounded-2xl border border-[--brand]/30 bg-[--brand]/5 p-6 relative overflow-hidden">
+                {promo?.enabled && (
+                  <span className="absolute top-3 right-3 bg-slate-900 text-white text-[9px] font-extrabold px-2.5 py-1 rounded-full uppercase tracking-wider">
+                    {promo.badgeText}
+                  </span>
+                )}
                 <h3 className="text-base font-extrabold text-slate-900 uppercase tracking-wide mb-5">En extérieur</h3>
                 <div className="space-y-3">
                   {[
-                    { label: "5 photos",  price: settings.exterieur_5 },
-                    { label: "10 photos", price: settings.exterieur_10 },
-                  ].map((row) => (
-                    <div key={row.label} className="flex items-center justify-between border-b border-slate-200 pb-3 last:border-0 last:pb-0">
-                      <span className="text-sm font-semibold text-slate-600">{row.label}</span>
-                      <strong className="text-sm font-extrabold text-slate-900">
-                        {row.price.toLocaleString("fr-FR")} <small className="font-bold text-slate-400 text-[11px]">FCFA</small>
-                      </strong>
-                    </div>
-                  ))}
+                    { key: "exterieur_5" as const,  label: "5 photos",  price: settings.exterieur_5 },
+                    { key: "exterieur_10" as const, label: "10 photos", price: settings.exterieur_10 },
+                  ].map((row) => {
+                    const promoVal = promo?.enabled ? promo.promoPrices[row.key] : undefined;
+                    const hasDiscount = promoVal && promoVal < row.price;
+                    return (
+                      <div key={row.label} className="flex items-center justify-between border-b border-slate-200 pb-3 last:border-0 last:pb-0">
+                        <span className="text-sm font-semibold text-slate-600">{row.label}</span>
+                        <div>
+                          {hasDiscount ? (
+                            <>
+                              <del className="text-xs font-bold text-slate-400 mr-2">{row.price.toLocaleString("fr-FR")} FCFA</del>
+                              <strong className="text-sm font-extrabold text-[--brand]">
+                                {promoVal.toLocaleString("fr-FR")} <small className="font-bold text-slate-400 text-[11px]">FCFA</small>
+                              </strong>
+                            </>
+                          ) : (
+                            <strong className="text-sm font-extrabold text-slate-900">
+                              {row.price.toLocaleString("fr-FR")} <small className="font-bold text-slate-400 text-[11px]">FCFA</small>
+                            </strong>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </div>
 
             {/* Reportage cérémonie */}
-            <div className="rounded-2xl border border-slate-900 bg-slate-950 p-6 sm:p-8">
+            <div className="rounded-2xl border border-slate-900 bg-slate-950 p-6 sm:p-8 relative overflow-hidden">
+              {promo?.enabled && (
+                <span className="absolute top-4 right-4 bg-amber-500 text-slate-950 text-[9px] font-extrabold px-3 py-1 rounded-full uppercase tracking-wider">
+                  {promo.badgeText}
+                </span>
+              )}
               <div className="mb-5">
                 <span className="text-[11px] font-extrabold uppercase tracking-widest text-[--brand]">Reportage cérémonie</span>
                 <h3 className="text-xl font-extrabold text-white mt-1">Mariage &amp; baptême</h3>
@@ -221,18 +304,33 @@ export default async function Home() {
               </div>
               <div className="space-y-3 mb-5">
                 {[
-                  { label: "80 photos",                 price: settings.ceremonie_80 },
-                  { label: "100 photos",                price: settings.ceremonie_100 },
-                  { label: "120 photos",                price: settings.ceremonie_120 },
-                  { label: "Pack Tak Diaka · 60 photos", price: settings.ceremonie_tak_diaka },
-                ].map((row) => (
-                  <div key={row.label} className="flex items-center justify-between border-b border-slate-800 pb-3 last:border-0 last:pb-0">
-                    <span className="text-sm font-semibold text-slate-300">{row.label}</span>
-                    <strong className="text-sm font-extrabold text-white">
-                      {row.price.toLocaleString("fr-FR")} <small className="font-bold text-slate-500 text-[11px]">FCFA</small>
-                    </strong>
-                  </div>
-                ))}
+                  { key: "ceremonie_80" as const,         label: "80 photos",                 price: settings.ceremonie_80 },
+                  { key: "ceremonie_100" as const,        label: "100 photos",                price: settings.ceremonie_100 },
+                  { key: "ceremonie_120" as const,        label: "120 photos",                price: settings.ceremonie_120 },
+                  { key: "ceremonie_tak_diaka" as const,  label: "Pack Tak Diaka · 60 photos", price: settings.ceremonie_tak_diaka },
+                ].map((row) => {
+                  const promoVal = promo?.enabled ? promo.promoPrices[row.key] : undefined;
+                  const hasDiscount = promoVal && promoVal < row.price;
+                  return (
+                    <div key={row.label} className="flex items-center justify-between border-b border-slate-800 pb-3 last:border-0 last:pb-0">
+                      <span className="text-sm font-semibold text-slate-300">{row.label}</span>
+                      <div>
+                        {hasDiscount ? (
+                          <>
+                            <del className="text-xs font-bold text-slate-500 mr-2">{row.price.toLocaleString("fr-FR")} FCFA</del>
+                            <strong className="text-sm font-extrabold text-amber-400">
+                              {promoVal.toLocaleString("fr-FR")} <small className="font-bold text-slate-500 text-[11px]">FCFA</small>
+                            </strong>
+                          </>
+                        ) : (
+                          <strong className="text-sm font-extrabold text-white">
+                            {row.price.toLocaleString("fr-FR")} <small className="font-bold text-slate-500 text-[11px]">FCFA</small>
+                          </strong>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
               {/* Option vidéo */}
               <div className="flex items-center justify-between rounded-xl bg-slate-800/60 px-4 py-3">

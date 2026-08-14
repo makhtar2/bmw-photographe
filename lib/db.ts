@@ -21,6 +21,8 @@ export interface Booking {
   formula: string;
   status: "En attente" | "Confirmé" | "Annulé";
   createdAt: string;
+  date?: string; // YYYY-MM-DD
+  time?: string; // HH:mm
 }
 
 export interface PricesSettings {
@@ -38,10 +40,19 @@ export interface PricesSettings {
   option_video: number;
 }
 
+export interface EventPromo {
+  enabled: boolean;
+  eventName: string;
+  subtitle: string;
+  badgeText: string;
+  promoPrices: Partial<PricesSettings>;
+}
+
 export interface Database {
   settings: PricesSettings;
   portfolio: PortfolioItem[];
   bookings: Booking[];
+  promo?: EventPromo;
 }
 
 const defaultDatabase: Database = {
@@ -62,7 +73,7 @@ const defaultDatabase: Database = {
   portfolio: [
     {
       id: 1,
-      src: "/portfolio/real1.png",
+      src: "https://res.cloudinary.com/fe55mqsh/image/upload/v1786721392/bmw-photographe-portfolio/idecilzcz1wtnnftftsz.png",
       alt: "Portrait élégance traditionnelle blanche par BMW Photographe",
       category: "studio",
       aspectClass: "aspect-[3/4]",
@@ -70,7 +81,7 @@ const defaultDatabase: Database = {
     },
     {
       id: 2,
-      src: "/portfolio/real2.png",
+      src: "https://res.cloudinary.com/fe55mqsh/image/upload/v1786721395/bmw-photographe-portfolio/orgjgabje4dgxta6nicd.png",
       alt: "Séance couple en tenues traditionnelles par BMW Photographe",
       category: "studio",
       aspectClass: "aspect-[3/4]",
@@ -78,7 +89,7 @@ const defaultDatabase: Database = {
     },
     {
       id: 3,
-      src: "/portfolio/real3.png",
+      src: "https://res.cloudinary.com/fe55mqsh/image/upload/v1786721397/bmw-photographe-portfolio/dk9fv87fjd7gufgtmt0d.png",
       alt: "Séance portrait éclat traditionnel bleu par BMW Photographe",
       category: "studio",
       aspectClass: "aspect-[3/4]",
@@ -86,7 +97,7 @@ const defaultDatabase: Database = {
     },
     {
       id: 4,
-      src: "/portfolio/real4.png",
+      src: "https://res.cloudinary.com/fe55mqsh/image/upload/v1786721358/bmw-photographe-portfolio/mzp7f4pfnl7asczpiqef.png",
       alt: "Portrait homme en kaftan noir par BMW Photographe",
       category: "exterior",
       aspectClass: "aspect-[2/3]",
@@ -94,7 +105,7 @@ const defaultDatabase: Database = {
     },
     {
       id: 5,
-      src: "/portfolio/real5.png",
+      src: "https://res.cloudinary.com/fe55mqsh/image/upload/v1786721359/bmw-photographe-portfolio/pjrumgnxzky88oriikby.jpg",
       alt: "Robe traditionnelle mariage rouge par BMW Photographe",
       category: "studio",
       aspectClass: "aspect-[3/4]",
@@ -102,7 +113,7 @@ const defaultDatabase: Database = {
     },
     {
       id: 6,
-      src: "/portfolio/real6.png",
+      src: "https://res.cloudinary.com/fe55mqsh/image/upload/v1786721360/bmw-photographe-portfolio/zzruma8ffcv5ps6uzb4p.jpg",
       alt: "Robe de mariée blanche en dentelle par BMW Photographe",
       category: "exterior",
       aspectClass: "aspect-[2/3]",
@@ -110,7 +121,7 @@ const defaultDatabase: Database = {
     },
     {
       id: 7,
-      src: "/portfolio/real7.png",
+      src: "https://res.cloudinary.com/fe55mqsh/image/upload/v1786721362/bmw-photographe-portfolio/ldf8tzbn7u6zkwchb1ah.png",
       alt: "Séance de préparation en peignoir par BMW Photographe",
       category: "studio",
       aspectClass: "aspect-[3/4]",
@@ -118,7 +129,7 @@ const defaultDatabase: Database = {
     },
     {
       id: 8,
-      src: "/portfolio/real8.png",
+      src: "https://res.cloudinary.com/fe55mqsh/image/upload/v1786721364/bmw-photographe-portfolio/kucjcfltzzlfd6he9rd1.jpg",
       alt: "Détails henne et alliances par BMW Photographe",
       category: "studio",
       aspectClass: "aspect-square",
@@ -126,7 +137,7 @@ const defaultDatabase: Database = {
     },
     {
       id: 9,
-      src: "/portfolio/real9.png",
+      src: "https://res.cloudinary.com/fe55mqsh/image/upload/v1786721366/bmw-photographe-portfolio/hwk2dsplqauoor8oasmx.jpg",
       alt: "Mariée voilée en tenue de noces par BMW Photographe",
       category: "studio",
       aspectClass: "aspect-[3/4]",
@@ -134,7 +145,7 @@ const defaultDatabase: Database = {
     },
     {
       id: 10,
-      src: "/portfolio/real10.png",
+      src: "https://res.cloudinary.com/fe55mqsh/image/upload/v1786721367/bmw-photographe-portfolio/s14qw9bpxayjcl4ejihq.jpg",
       alt: "Émotion et recueillement de la mariée par BMW Photographe",
       category: "studio",
       aspectClass: "aspect-[3/4]",
@@ -142,7 +153,7 @@ const defaultDatabase: Database = {
     },
     {
       id: 11,
-      src: "/portfolio/real11.png",
+      src: "https://res.cloudinary.com/fe55mqsh/image/upload/v1786721371/bmw-photographe-portfolio/tnekogp2wwsnzcutzhzk.png",
       alt: "Portrait souriant en voile noir et rouge par BMW Photographe",
       category: "exterior",
       aspectClass: "aspect-[2/3]",
@@ -150,7 +161,7 @@ const defaultDatabase: Database = {
     },
     {
       id: 12,
-      src: "/portfolio/real12.png",
+      src: "https://res.cloudinary.com/fe55mqsh/image/upload/v1786721374/bmw-photographe-portfolio/or3zzxm9daptwceljpqb.png",
       alt: "Complicité et éclats de rire du couple par BMW Photographe",
       category: "studio",
       aspectClass: "aspect-[3/4]",
@@ -158,6 +169,26 @@ const defaultDatabase: Database = {
     },
   ],
   bookings: [],
+  promo: {
+    enabled: true,
+    eventName: "Spécial Gamou",
+    subtitle: "Profitez de réductions exclusives sur vos séances photo pour le Gamou !",
+    badgeText: "PROMO GAMOU",
+    promoPrices: {
+      studio_5: 8000,
+      studio_7: 12000,
+      studio_10: 16000,
+      studio_15: 25000,
+      studio_20: 42000,
+      exterieur_5: 20000,
+      exterieur_10: 35000,
+      ceremonie_80: 95000,
+      ceremonie_100: 110000,
+      ceremonie_120: 135000,
+      ceremonie_tak_diaka: 75000,
+      option_video: 12000,
+    },
+  },
 };
 
 // Initialisation automatique des assets (logo et images)
@@ -174,20 +205,6 @@ async function initAssets() {
     { src: "/home/almuxtaar/.gemini/antigravity/brain/93d24a8d-6093-46f5-8bcd-743fc734d0c1/media__1786667862052.png", dest: "icon-192.png" },
     { src: "/home/almuxtaar/.gemini/antigravity/brain/93d24a8d-6093-46f5-8bcd-743fc734d0c1/media__1786667862052.png", dest: "icon-512.png" },
     { src: "/home/almuxtaar/.gemini/antigravity/brain/93d24a8d-6093-46f5-8bcd-743fc734d0c1/media__1786667862052.png", dest: "icon-maskable.png" },
-    
-    // Copy the 12 real uploaded photos
-    { src: "/home/almuxtaar/.gemini/antigravity/brain/93d24a8d-6093-46f5-8bcd-743fc734d0c1/media__1786674950800.png", dest: "portfolio/real1.png" },
-    { src: "/home/almuxtaar/.gemini/antigravity/brain/93d24a8d-6093-46f5-8bcd-743fc734d0c1/media__1786674985495.png", dest: "portfolio/real2.png" },
-    { src: "/home/almuxtaar/.gemini/antigravity/brain/93d24a8d-6093-46f5-8bcd-743fc734d0c1/media__1786674990513.png", dest: "portfolio/real3.png" },
-    { src: "/home/almuxtaar/.gemini/antigravity/brain/93d24a8d-6093-46f5-8bcd-743fc734d0c1/media__1786674996325.png", dest: "portfolio/real4.png" },
-    { src: "/home/almuxtaar/.gemini/antigravity/brain/93d24a8d-6093-46f5-8bcd-743fc734d0c1/media__1786675001669.jpg", dest: "portfolio/real5.png" },
-    { src: "/home/almuxtaar/.gemini/antigravity/brain/93d24a8d-6093-46f5-8bcd-743fc734d0c1/media__1786675039466.jpg", dest: "portfolio/real6.png" },
-    { src: "/home/almuxtaar/.gemini/antigravity/brain/93d24a8d-6093-46f5-8bcd-743fc734d0c1/media__1786675044561.png", dest: "portfolio/real7.png" },
-    { src: "/home/almuxtaar/.gemini/antigravity/brain/93d24a8d-6093-46f5-8bcd-743fc734d0c1/media__1786675049444.jpg", dest: "portfolio/real8.png" },
-    { src: "/home/almuxtaar/.gemini/antigravity/brain/93d24a8d-6093-46f5-8bcd-743fc734d0c1/media__1786675054923.jpg", dest: "portfolio/real9.png" },
-    { src: "/home/almuxtaar/.gemini/antigravity/brain/93d24a8d-6093-46f5-8bcd-743fc734d0c1/media__1786675071814.jpg", dest: "portfolio/real10.png" },
-    { src: "/home/almuxtaar/.gemini/antigravity/brain/93d24a8d-6093-46f5-8bcd-743fc734d0c1/media__1786675081032.png", dest: "portfolio/real11.png" },
-    { src: "/home/almuxtaar/.gemini/antigravity/brain/93d24a8d-6093-46f5-8bcd-743fc734d0c1/media__1786675086065.png", dest: "portfolio/real12.png" },
   ];
   
   for (const file of filesToCopy) {

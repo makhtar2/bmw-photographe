@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import PWARegistration from "../components/PWARegistration";
 import Footer from "../components/Footer";
@@ -10,17 +10,25 @@ const inter = Inter({
   display: "swap",
 });
 
+const playfair = Playfair_Display({
+  subsets: ["latin"],
+  variable: "--font-serif",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
-  title: "BMW Photographe | Photographe Professionnel à Thiès Médina Fall",
-  description: "Séances photo et vidéos exclusives pour tous vos événements à Thiès. Immortalisez vos plus beaux moments avec des clichés de qualité premium.",
+  title: "BMW Photographe | Studio Photo à Thiès — Disponible partout au Sénégal",
+  description: "Séances photo studio, extérieur et cérémonies. Photographe professionnel basé à Thiès Médina Fall, disponible partout au Sénégal (Dakar, Mbour, Saint-Louis, Ziguinchor).",
   keywords: [
     "BMW Photographe",
     "Photographe Thiès",
+    "Photographe Sénégal",
+    "Disponible partout au Sénégal",
     "Shooting photo professionnel",
     "Médina Fall",
     "Thiès photo",
     "Studio photo Sénégal",
-    "Réservation shooting photo"
+    "Photographe Mariage Sénégal"
   ],
   authors: [{ name: "BMW Photographe" }],
   openGraph: {
@@ -61,17 +69,7 @@ export default function RootLayout({
       <head>
         <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
       </head>
-      <body className={`${inter.variable} font-sans antialiased bg-[#F8FAFC] text-[#0F172A] relative min-h-screen`}>
-        
-        {/* Aura Background Spots for premium, modern UX/UI */}
-        <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-          {/* Top-Left Spot (Brand Orange) */}
-          <div className="absolute -top-48 -left-48 w-[400px] h-[400px] rounded-full bg-[#F4912D]/10 blur-[100px]"></div>
-          {/* Bottom-Right Spot (Teal/Emerald) */}
-          <div className="absolute -bottom-48 -right-48 w-[400px] h-[400px] rounded-full bg-[#10B981]/10 blur-[100px]"></div>
-          {/* Middle-Right Spot (Soft Rose/Crimson) */}
-          <div className="absolute top-[30%] -right-24 w-80 h-80 rounded-full bg-[#F43F5E]/6 blur-[80px]"></div>
-        </div>
+      <body className={`${inter.variable} ${playfair.variable} font-sans antialiased bg-[#FAFAF9] text-[#1C1917] relative min-h-screen`}>
 
         <div className="relative z-10 flex flex-col min-h-screen">
           <PWARegistration />

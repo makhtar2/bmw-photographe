@@ -116,7 +116,7 @@ export default function BookingForm({ settings, id = "reservation" }: BookingFor
               <div className="relative">
                 <label className="block text-[11px] text-slate-500 font-extrabold uppercase tracking-wider mb-2 pl-1">Nom Complet</label>
                 <div className="relative">
-                  <MaterialIcon name="person" className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-lg" />
+                  <MaterialIcon name="person" className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5 pointer-events-none" />
                   <input
                     type="text"
                     {...register("name")}
@@ -131,7 +131,7 @@ export default function BookingForm({ settings, id = "reservation" }: BookingFor
               <div className="relative">
                 <label className="block text-[11px] text-slate-500 font-extrabold uppercase tracking-wider mb-2 pl-1">Numéro WhatsApp</label>
                 <div className="relative">
-                  <MaterialIcon name="phone" className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-lg" />
+                  <MaterialIcon name="phone" className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5 pointer-events-none" />
                   <input
                     type="tel"
                     {...register("phone")}
@@ -156,9 +156,9 @@ export default function BookingForm({ settings, id = "reservation" }: BookingFor
                       }`}
                     >
                       <input type="radio" value={l} {...register("location")} className="sr-only" />
-                      <span className="inline-flex max-w-full items-center justify-center gap-1 truncate">
-                        <MaterialIcon name={l === "Studio" ? "photo_camera" : l === "Domicile" ? "home" : "favorite"} className="text-base" />
-                        {l === "Studio" ? "Studio" : l === "Domicile" ? "Extérieur" : "Mariage"}
+                      <span className="inline-flex max-w-full items-center justify-center items-center gap-1.5 truncate">
+                        <MaterialIcon name={l === "Studio" ? "photo_camera" : l === "Domicile" ? "home" : "favorite"} className="w-4 h-4 shrink-0" />
+                        <span>{l === "Studio" ? "Studio" : l === "Domicile" ? "Extérieur" : "Mariage"}</span>
                       </span>
                     </label>
                   ))}
@@ -169,7 +169,7 @@ export default function BookingForm({ settings, id = "reservation" }: BookingFor
               <div className="relative">
                 <label className="block text-[11px] text-slate-500 font-extrabold uppercase tracking-wider mb-2 pl-1">Formule choisie</label>
                 <div className="relative">
-                  <MaterialIcon name="layers" className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-lg" />
+                  <MaterialIcon name="layers" className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5 pointer-events-none" />
                   <select 
                     {...register("formula")} 
                     className={inputStyle(!!errors.formula) + " cursor-pointer appearance-none bg-slate-50"}
@@ -177,7 +177,7 @@ export default function BookingForm({ settings, id = "reservation" }: BookingFor
                     <option value="">Sélectionnez un pack</option>
                     {formulas.map((f) => <option key={f.value} value={f.value}>{f.label}</option>)}
                   </select>
-                  <MaterialIcon name="keyboard_arrow_down" className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 text-lg" />
+                  <MaterialIcon name="keyboard_arrow_down" className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 w-5 h-5" />
                 </div>
                 {errors.formula && <p className="text-red-500 text-[11px] mt-1.5 pl-2 font-bold">{errors.formula.message}</p>}
               </div>

@@ -2,9 +2,17 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import MaterialIcon from "./MaterialIcon";
 
 export default function Footer() {
+  const pathname = usePathname();
+
+  // Ne pas afficher le footer public sur l'administration PWA
+  if (pathname?.startsWith("/admin")) {
+    return null;
+  }
+
   return (
     <footer className="bg-slate-950 text-slate-400 border-t border-slate-900 px-5 md:px-10 pt-16 pb-28 md:pb-16 relative z-10">
       <div className="max-w-[1400px] mx-auto grid grid-cols-1 md:grid-cols-12 gap-10">
@@ -20,7 +28,7 @@ export default function Footer() {
             />
           </div>
           <p className="text-[14px] text-slate-400 font-bold leading-relaxed max-w-sm">
-            Créateur d&apos;émotions et de souvenirs impérissables à Thiès. Des portraits professionnels au studio à domicile, nous capturons votre authenticité.
+            Créateur d&apos;émotions et de souvenirs impérissables à Thiès. Disponible partout au Sénégal pour vos séances studio, extérieur et cérémonies.
           </p>
           <div className="flex items-center gap-3">
             <a 
