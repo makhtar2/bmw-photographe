@@ -610,17 +610,6 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
               </span>
             )}
 
-            {!isStandalone && (
-              <button
-                onClick={handleInstallPwa}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[--brand] text-slate-950 text-[11px] font-black rounded-xl hover:brightness-110 transition-all shadow-md active:scale-95"
-                title="Installer l'application Admin sur mon téléphone"
-              >
-                <Download className="w-3.5 h-3.5" />
-                <span>Installer App</span>
-              </button>
-            )}
-
             <button
               onClick={handleLogout}
               className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors"
@@ -659,31 +648,6 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
 
       {/* CONTENU PRINCIPAL */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-8 py-6 sm:py-8 space-y-6">
-
-        {/* BANNIÈRE PROMOTIONNELLE D'INSTALLATION APP MOBILE */}
-        {!isStandalone && (
-          <div className="bg-gradient-to-r from-slate-900 via-slate-900 to-slate-950 text-white p-5 sm:p-6 rounded-3xl border border-slate-800 shadow-xl flex flex-col md:flex-row items-center justify-between gap-5 relative overflow-hidden">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-[--brand]/20 border border-[--brand]/40 flex items-center justify-center text-[--brand] shrink-0 shadow-lg">
-                <Smartphone className="w-6 h-6 sm:w-7 sm:h-7" />
-              </div>
-              <div>
-                <h4 className="text-sm sm:text-base font-extrabold text-white flex items-center gap-2">
-                  Installer l&apos;Application Admin sur votre Téléphone 📲
-                </h4>
-                <p className="text-xs text-slate-300 font-semibold mt-0.5 max-w-xl">
-                  Accédez à votre tableau de bord studio en 1 clic directement depuis votre écran d&apos;accueil mobile.
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={handleInstallPwa}
-              className="py-3 px-6 bg-[--brand] text-slate-950 hover:brightness-110 font-black rounded-2xl text-xs uppercase tracking-wider flex items-center gap-2 shadow-lg shadow-[--brand]/20 transition-all shrink-0 active:scale-95 w-full md:w-auto justify-center"
-            >
-              <Download className="w-4 h-4" /> Installer l&apos;App Maintenant
-            </button>
-          </div>
-        )}
 
         {/* NAVIGATION ONGLETS DESKTOP MULTI-PAGES */}
         <div className="hidden md:flex bg-slate-200/60 p-1.5 rounded-2xl gap-2 overflow-x-auto no-scrollbar">
@@ -1736,64 +1700,6 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
           <span className="text-[10px]">Tarifs</span>
         </Link>
       </nav>
-
-      {/* MODAL GUIDE INSTALLATION APP SUR MOBILE */}
-      {showInstallModal && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-6 relative border border-slate-100 animate-in fade-in zoom-in duration-200">
-            <div className="flex items-start justify-between border-b border-slate-100 pb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center text-[--brand]">
-                  <Smartphone className="w-6 h-6" />
-                </div>
-                <div>
-                  <h3 className="font-extrabold text-slate-900 text-lg">Installer l&apos;App Admin</h3>
-                  <p className="text-xs text-slate-500 font-semibold">Guide rapide pour votre téléphone</p>
-                </div>
-              </div>
-              <button
-                onClick={() => setShowInstallModal(false)}
-                className="text-slate-400 hover:text-slate-700 p-1 rounded-full hover:bg-slate-100"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="space-y-4">
-              {/* iPhone / Safari Guide */}
-              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-2">
-                <span className="text-xs font-black text-[--brand] uppercase tracking-wider block">
-                  🍏 Sur iPhone / iPad (Safari) :
-                </span>
-                <ol className="text-xs font-bold text-slate-700 space-y-2 list-decimal list-inside">
-                  <li>Appuyez sur le bouton <span className="inline-flex items-center gap-1 bg-white px-2 py-0.5 rounded border text-slate-900 font-mono"><Share className="w-3.5 h-3.5 text-blue-600 inline" /> Partager</span> en bas du navigateur.</li>
-                  <li>Faites défiler vers le bas et sélectionnez <span className="font-extrabold text-slate-900">&quot;Sur l&apos;écran d&apos;accueil&quot; 📲</span>.</li>
-                  <li>Cliquez sur <span className="font-extrabold text-slate-900">&quot;Ajouter&quot;</span> en haut à droite.</li>
-                </ol>
-              </div>
-
-              {/* Android / Chrome Guide */}
-              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-2">
-                <span className="text-xs font-black text-emerald-600 uppercase tracking-wider block">
-                  🤖 Sur Android (Chrome / Samsung Internet) :
-                </span>
-                <ol className="text-xs font-bold text-slate-700 space-y-2 list-decimal list-inside">
-                  <li>Appuyez sur les <span className="font-extrabold text-slate-900">3 points (⋮)</span> en haut à droite.</li>
-                  <li>Sélectionnez <span className="font-extrabold text-slate-900">&quot;Installer l&apos;application&quot;</span> ou <span className="font-extrabold text-slate-900">&quot;Ajouter à l&apos;écran d&apos;accueil&quot;</span>.</li>
-                  <li>Confirmez l&apos;installation.</li>
-                </ol>
-              </div>
-            </div>
-
-            <button
-              onClick={() => setShowInstallModal(false)}
-              className="w-full py-3.5 bg-slate-900 text-white font-extrabold text-xs uppercase tracking-wider rounded-xl hover:bg-slate-800 transition-colors shadow-lg"
-            >
-              J&apos;ai compris
-            </button>
-          </div>
-        </div>
-      )}
 
     </div>
   );
