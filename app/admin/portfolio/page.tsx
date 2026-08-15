@@ -19,6 +19,7 @@ export default async function AdminPortfolioPage() {
   return (
     <AdminDashboard
       initialSettings={db.settings}
+      initialLabels={db.labels}
       initialBookings={db.bookings}
       initialPortfolio={db.portfolio}
       initialPromo={db.promo}

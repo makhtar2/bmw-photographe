@@ -4,8 +4,8 @@ import { useState, useTransition, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { logoutAdmin, updatePricesSettings, updateBookingStatus, deleteBooking, addBookingAdmin, updateBookingFull, addPortfolioItem, deletePortfolioItem, updatePortfolioItem, updatePromoOffer } from "../app/actions";
-import { PricesSettings, Booking, PortfolioItem, EventPromo } from "../lib/db";
-import { DEFAULT_PROMO } from "../lib/defaults";
+import { PricesSettings, PackageLabels, Booking, PortfolioItem, EventPromo } from "../lib/db";
+import { DEFAULT_PROMO, DEFAULT_LABELS } from "../lib/defaults";
 import {
   LogOut,
   Settings,
@@ -38,6 +38,7 @@ import Image from "next/image";
 
 interface AdminDashboardProps {
   initialSettings: PricesSettings;
+  initialLabels?: PackageLabels;
   initialBookings: Booking[];
   initialPortfolio: PortfolioItem[];
   initialPromo?: EventPromo;
@@ -135,7 +136,7 @@ BMW Photographe`;
   return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(text)}`;
 }
 
-export default function AdminDashboard({ initialSettings, initialBookings, initialPortfolio, initialPromo, currentRoute }: AdminDashboardProps) {
+export default function AdminDashboard({ initialSettings, initialLabels, initialBookings, initialPortfolio, initialPromo, currentRoute }: AdminDashboardProps) {
   const pathname = usePathname();
   const activeTab = (currentRoute || pathname) === "/admin/agenda"
     ? "calendar"
@@ -146,6 +147,7 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
         : "reservations";
 
   const [settings, setSettings] = useState<PricesSettings>(initialSettings);
+  const [labels, setLabels] = useState<PackageLabels>(initialLabels || DEFAULT_LABELS);
   const [bookings, setBookings] = useState<Booking[]>(initialBookings);
   const [portfolio, setPortfolio] = useState<PortfolioItem[]>(initialPortfolio);
   const [promo, setPromo] = useState<EventPromo>(initialPromo || DEFAULT_PROMO);
@@ -287,6 +289,7 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
       // jamais écraser une saisie en cours sur l'onglet "Tarifs".
       if (activeTabRef.current !== "prices") {
         if (data.settings) setSettings(data.settings);
+        if (data.labels) setLabels(data.labels);
         if (data.promo) setPromo(data.promo);
       }
     } catch (e) { }
@@ -330,7 +333,7 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
   const handleUpdatePrices = async (e: React.FormEvent) => {
     e.preventDefault();
     startTransition(async () => {
-      const res = await updatePricesSettings(settings);
+      const res = await updatePricesSettings(settings, labels);
       if (res.success) {
         triggerNotification("success", "Tarifs enregistrés et mis à jour !");
       } else {
@@ -1290,15 +1293,15 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
                   En Studio
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                  {[
-                    { key: "studio_5" as const, label: "5 photos" },
-                    { key: "studio_7" as const, label: "7 photos" },
-                    { key: "studio_10" as const, label: "10 photos" },
-                    { key: "studio_15" as const, label: "15 photos" },
-                    { key: "studio_20" as const, label: "20 photos" },
-                  ].map(({ key, label }) => (
+                  {(["studio_5", "studio_7", "studio_10", "studio_15", "studio_20"] as const).map((key) => (
                     <div key={key}>
-                      <label className="block text-xs font-extrabold text-slate-600 mb-1.5">{label}</label>
+                      <input
+                        type="text"
+                        value={labels[key]}
+                        onChange={(e) => setLabels(prev => ({ ...prev, [key]: e.target.value }))}
+                        placeholder="Libellé (ex: 5 photos)"
+                        className="w-full mb-1.5 px-0.5 py-0.5 bg-transparent border-0 border-b border-dashed border-slate-300 focus:border-[--brand] text-xs font-extrabold text-slate-600 focus:outline-none transition-colors"
+                      />
                       <div className="relative">
                         <input
                           type="number"
@@ -1321,12 +1324,15 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
                   En Extérieur
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                  {[
-                    { key: "exterieur_5" as const, label: "5 photos" },
-                    { key: "exterieur_10" as const, label: "10 photos" },
-                  ].map(({ key, label }) => (
+                  {(["exterieur_5", "exterieur_10"] as const).map((key) => (
                     <div key={key}>
-                      <label className="block text-xs font-extrabold text-slate-600 mb-1.5">{label}</label>
+                      <input
+                        type="text"
+                        value={labels[key]}
+                        onChange={(e) => setLabels(prev => ({ ...prev, [key]: e.target.value }))}
+                        placeholder="Libellé (ex: 5 photos)"
+                        className="w-full mb-1.5 px-0.5 py-0.5 bg-transparent border-0 border-b border-dashed border-slate-300 focus:border-[--brand] text-xs font-extrabold text-slate-600 focus:outline-none transition-colors"
+                      />
                       <div className="relative">
                         <input
                           type="number"
@@ -1349,15 +1355,15 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
                   Mariage &amp; Baptême
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                  {[
-                    { key: "ceremonie_80" as const, label: "80 photos" },
-                    { key: "ceremonie_100" as const, label: "100 photos" },
-                    { key: "ceremonie_120" as const, label: "120 photos" },
-                    { key: "ceremonie_tak_diaka" as const, label: "Pack Tak Diaka" },
-                    { key: "option_video" as const, label: "Option Vidéo" },
-                  ].map(({ key, label }) => (
+                  {(["ceremonie_80", "ceremonie_100", "ceremonie_120", "ceremonie_tak_diaka", "option_video"] as const).map((key) => (
                     <div key={key}>
-                      <label className="block text-xs font-extrabold text-slate-600 mb-1.5">{label}</label>
+                      <input
+                        type="text"
+                        value={labels[key]}
+                        onChange={(e) => setLabels(prev => ({ ...prev, [key]: e.target.value }))}
+                        placeholder="Libellé (ex: 80 photos)"
+                        className="w-full mb-1.5 px-0.5 py-0.5 bg-transparent border-0 border-b border-dashed border-slate-300 focus:border-[--brand] text-xs font-extrabold text-slate-600 focus:outline-none transition-colors"
+                      />
                       <div className="relative">
                         <input
                           type="number"
@@ -1454,19 +1460,11 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
                   </h4>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {[
-                      { key: "studio_5" as const, label: `Studio 5 photos (Normal: ${(settings.studio_5 || 10000).toLocaleString("fr-FR")} FCFA)` },
-                      { key: "studio_7" as const, label: `Studio 7 photos (Normal: ${(settings.studio_7 || 15000).toLocaleString("fr-FR")} FCFA)` },
-                      { key: "studio_10" as const, label: `Studio 10 photos (Normal: ${(settings.studio_10 || 20000).toLocaleString("fr-FR")} FCFA)` },
-                      { key: "studio_15" as const, label: `Studio 15 photos (Normal: ${(settings.studio_15 || 30000).toLocaleString("fr-FR")} FCFA)` },
-                      { key: "studio_20" as const, label: `Studio 20 photos (Normal: ${(settings.studio_20 || 50000).toLocaleString("fr-FR")} FCFA)` },
-                      { key: "exterieur_5" as const, label: `Extérieur 5 photos (Normal: ${(settings.exterieur_5 || 25000).toLocaleString("fr-FR")} FCFA)` },
-                      { key: "exterieur_10" as const, label: `Extérieur 10 photos (Normal: ${(settings.exterieur_10 || 40000).toLocaleString("fr-FR")} FCFA)` },
-                      { key: "ceremonie_80" as const, label: `Mariage 80 photos (Normal: ${(settings.ceremonie_80 || 110000).toLocaleString("fr-FR")} FCFA)` },
-                      { key: "ceremonie_100" as const, label: `Mariage 100 photos (Normal: ${(settings.ceremonie_100 || 125000).toLocaleString("fr-FR")} FCFA)` },
-                      { key: "ceremonie_120" as const, label: `Mariage 120 photos (Normal: ${(settings.ceremonie_120 || 150000).toLocaleString("fr-FR")} FCFA)` },
-                      { key: "ceremonie_tak_diaka" as const, label: `Tak Diaka (Normal: ${(settings.ceremonie_tak_diaka || 85000).toLocaleString("fr-FR")} FCFA)` },
-                    ].map(({ key, label }) => (
+                    {([
+                      "studio_5", "studio_7", "studio_10", "studio_15", "studio_20",
+                      "exterieur_5", "exterieur_10",
+                      "ceremonie_80", "ceremonie_100", "ceremonie_120", "ceremonie_tak_diaka",
+                    ] as const).map((key) => ({ key, label: `${labels[key]} (Normal: ${settings[key].toLocaleString("fr-FR")} FCFA)` })).map(({ key, label }) => (
                       <div key={key}>
                         <label className="block text-[11px] font-extrabold text-slate-600 mb-1">{label}</label>
                         <div className="relative">

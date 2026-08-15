@@ -1,5 +1,5 @@
 import { Redis } from "@upstash/redis";
-import { DEFAULT_PROMO } from "./defaults";
+import { DEFAULT_PROMO, DEFAULT_LABELS } from "./defaults";
 
 export interface PortfolioItem {
   id: number;
@@ -37,6 +37,10 @@ export interface PricesSettings {
   option_video: number;
 }
 
+// Libellé affiché pour chaque formule (ex: "5 photos"), éditable depuis
+// l'admin indépendamment du prix.
+export type PackageLabels = Record<keyof PricesSettings, string>;
+
 export interface EventPromo {
   enabled: boolean;
   eventName: string;
@@ -47,6 +51,7 @@ export interface EventPromo {
 
 export interface Database {
   settings: PricesSettings;
+  labels: PackageLabels;
   portfolio: PortfolioItem[];
   bookings: Booking[];
   promo?: EventPromo;
@@ -67,6 +72,7 @@ const defaultDatabase: Database = {
     ceremonie_tak_diaka: 85000,
     option_video: 15000,
   },
+  labels: DEFAULT_LABELS,
   portfolio: [
     {
       id: 1,
@@ -192,7 +198,12 @@ export async function getDb(): Promise<Database> {
   const redis = getRedis();
   const data = await redis.get<Database>(DB_KEY);
 
-  if (data) return data;
+  if (data) {
+    // Rétrocompatibilité : les entrées écrites avant l'ajout des libellés
+    // de formules n'ont pas ce champ.
+    if (!data.labels) data.labels = DEFAULT_LABELS;
+    return data;
+  }
 
   // Première utilisation : on amorce Redis avec la base par défaut.
   await redis.set(DB_KEY, defaultDatabase);

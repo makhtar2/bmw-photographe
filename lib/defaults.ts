@@ -1,4 +1,4 @@
-import type { EventPromo } from "./db";
+import type { EventPromo, PackageLabels } from "./db";
 
 // Valeurs par défaut de la promo événementielle — isolées de lib/db.ts
 // (qui importe fs/promises) pour pouvoir être importées depuis des
@@ -22,4 +22,21 @@ export const DEFAULT_PROMO: EventPromo = {
     ceremonie_tak_diaka: 75000,
     option_video: 12000,
   },
+};
+
+// Libellés par défaut de chaque formule — éditables depuis l'admin, au même
+// titre que les prix (ex: renommer "5 photos" en "5 photos + 1 tirage").
+export const DEFAULT_LABELS: PackageLabels = {
+  studio_5: "5 photos",
+  studio_7: "7 photos",
+  studio_10: "10 photos",
+  studio_15: "15 photos",
+  studio_20: "20 photos",
+  exterieur_5: "5 photos",
+  exterieur_10: "10 photos",
+  ceremonie_80: "80 photos",
+  ceremonie_100: "100 photos",
+  ceremonie_120: "120 photos",
+  ceremonie_tak_diaka: "Pack Tak Diaka · 60 photos",
+  option_video: "Vidéo cinématique",
 };

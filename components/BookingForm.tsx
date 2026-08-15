@@ -6,18 +6,21 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { bookingSchema, BookingInput } from "../lib/schema";
 import { submitBooking } from "../app/actions";
 import MaterialIcon from "./MaterialIcon";
-import { PricesSettings } from "../lib/db";
+import { PricesSettings, PackageLabels } from "../lib/db";
+import { DEFAULT_LABELS } from "../lib/defaults";
 
 interface BookingFormProps {
   settings: PricesSettings;
+  labels?: PackageLabels;
   id?: string;
 }
 
-export default function BookingForm({ settings, id = "reservation" }: BookingFormProps) {
+export default function BookingForm({ settings, labels, id = "reservation" }: BookingFormProps) {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
   const activeSettings = settings;
+  const activeLabels = labels || DEFAULT_LABELS;
 
   const {
     register,
@@ -31,24 +34,29 @@ export default function BookingForm({ settings, id = "reservation" }: BookingFor
 
   const loc = watch("location");
 
+  const formulaOption = (key: keyof PricesSettings) => {
+    const text = `${activeLabels[key]} — ${activeSettings[key].toLocaleString("fr-FR")} FCFA`;
+    return { value: text, label: text };
+  };
+
   const studioFormulas = [
-    { value: `5 photos — ${(activeSettings.studio_5 || 10000).toLocaleString("fr-FR")} FCFA`,  label: `5 photos — ${(activeSettings.studio_5 || 10000).toLocaleString("fr-FR")} FCFA` },
-    { value: `7 photos — ${(activeSettings.studio_7 || 15000).toLocaleString("fr-FR")} FCFA`,  label: `7 photos — ${(activeSettings.studio_7 || 15000).toLocaleString("fr-FR")} FCFA` },
-    { value: `10 photos — ${(activeSettings.studio_10 || 20000).toLocaleString("fr-FR")} FCFA`, label: `10 photos — ${(activeSettings.studio_10 || 20000).toLocaleString("fr-FR")} FCFA` },
-    { value: `15 photos — ${(activeSettings.studio_15 || 30000).toLocaleString("fr-FR")} FCFA`, label: `15 photos — ${(activeSettings.studio_15 || 30000).toLocaleString("fr-FR")} FCFA` },
-    { value: `20 photos — ${(activeSettings.studio_20 || 50000).toLocaleString("fr-FR")} FCFA`, label: `20 photos — ${(activeSettings.studio_20 || 50000).toLocaleString("fr-FR")} FCFA` },
+    formulaOption("studio_5"),
+    formulaOption("studio_7"),
+    formulaOption("studio_10"),
+    formulaOption("studio_15"),
+    formulaOption("studio_20"),
   ];
 
   const domicileFormulas = [
-    { value: `5 photos — ${(activeSettings.exterieur_5 || 25000).toLocaleString("fr-FR")} FCFA`,  label: `5 photos — ${(activeSettings.exterieur_5 || 25000).toLocaleString("fr-FR")} FCFA` },
-    { value: `10 photos — ${(activeSettings.exterieur_10 || 40000).toLocaleString("fr-FR")} FCFA`, label: `10 photos — ${(activeSettings.exterieur_10 || 40000).toLocaleString("fr-FR")} FCFA` },
+    formulaOption("exterieur_5"),
+    formulaOption("exterieur_10"),
   ];
 
   const mariageFormulas = [
-    { value: `80 photos — ${(activeSettings.ceremonie_80 || 110000).toLocaleString("fr-FR")} FCFA`,                 label: `80 photos — ${(activeSettings.ceremonie_80 || 110000).toLocaleString("fr-FR")} FCFA` },
-    { value: `100 photos — ${(activeSettings.ceremonie_100 || 125000).toLocaleString("fr-FR")} FCFA`,                label: `100 photos — ${(activeSettings.ceremonie_100 || 125000).toLocaleString("fr-FR")} FCFA` },
-    { value: `120 photos — ${(activeSettings.ceremonie_120 || 150000).toLocaleString("fr-FR")} FCFA`,                label: `120 photos — ${(activeSettings.ceremonie_120 || 150000).toLocaleString("fr-FR")} FCFA` },
-    { value: `Pack Tak Diaka · 60 photos — ${(activeSettings.ceremonie_tak_diaka || 85000).toLocaleString("fr-FR")} FCFA`, label: `Pack Tak Diaka · 60 photos — ${(activeSettings.ceremonie_tak_diaka || 85000).toLocaleString("fr-FR")} FCFA` },
+    formulaOption("ceremonie_80"),
+    formulaOption("ceremonie_100"),
+    formulaOption("ceremonie_120"),
+    formulaOption("ceremonie_tak_diaka"),
   ];
 
   const formulas = loc === "Studio" ? studioFormulas : loc === "Domicile" ? domicileFormulas : mariageFormulas;
