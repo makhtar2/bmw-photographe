@@ -88,7 +88,7 @@ export default async function Home() {
               </h1>
               
               <p className="max-w-xl text-base font-semibold leading-relaxed text-slate-600 mx-auto lg:mx-0">
-                Des portraits sensibles et affirmés, pensés pour révéler votre présence — en studio, en extérieur et lors de vos grands moments à Thiès et sur l'ensemble du Sénégal.
+                Des portraits sensibles et affirmés, pensés pour révéler votre présence — en studio, en extérieur et lors de vos grands moments à Thiès et sur l’ensemble du Sénégal.
               </p>
               
               <div className="flex flex-col gap-3 sm:flex-row">

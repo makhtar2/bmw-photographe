@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { v2 as cloudinary } from "cloudinary";
 import fs from "fs/promises";
 import path from "path";
+import { cookies } from "next/headers";
 import { getDb, writeDb } from "../../../lib/db";
 
 cloudinary.config({
@@ -12,6 +13,11 @@ cloudinary.config({
 });
 
 export async function GET() {
+  const session = cookies().get("bmw_admin_session");
+  if (session?.value !== "authenticated") {
+    return NextResponse.json({ success: false, message: "Non autorisé" }, { status: 401 });
+  }
+
   try {
     const db = await getDb();
     const publicDir = path.join(process.cwd(), "public");

@@ -5,14 +5,14 @@ import Image from "next/image";
 import Link from "next/link";
 import MaterialIcon from "./MaterialIcon";
 
+const navItems = [
+  { label: "Accueil", path: "/#accueil", key: "accueil", icon: "home" },
+  { label: "Portfolio", path: "/#portfolio", key: "portfolio", icon: "photo_camera" },
+  { label: "Réservation", path: "/#reservation", key: "reservation", icon: "calendar_month" },
+];
+
 export default function Navbar() {
   const [activeSection, setActiveSection] = useState("accueil");
-
-  const navItems = [
-    { label: "Accueil", path: "/#accueil", key: "accueil", icon: "home" },
-    { label: "Portfolio", path: "/#portfolio", key: "portfolio", icon: "photo_camera" },
-    { label: "Réservation", path: "/#reservation", key: "reservation", icon: "calendar_month" },
-  ];
 
   // Scroll spy to detect active section dynamically
   useEffect(() => {

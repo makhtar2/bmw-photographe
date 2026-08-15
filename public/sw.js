@@ -1,14 +1,8 @@
-const CACHE_NAME = 'bmw-photo-cache-v1';
+const CACHE_NAME = 'bmw-photo-cache-v2';
 const ASSETS_TO_CACHE = [
   '/',
   '/logo.png',
   '/logo-square.png',
-  '/portfolio/studio1.png',
-  '/portfolio/studio2.png',
-  '/portfolio/studio3.png',
-  '/portfolio/exterior1.png',
-  '/portfolio/exterior2.png',
-  '/portfolio/exterior3.png',
 ];
 
 // Installation du Service Worker et mise en cache des ressources statiques
@@ -51,7 +45,7 @@ self.addEventListener('fetch', (event) => {
         if (
           networkResponse && 
           networkResponse.status === 200 && 
-          (event.request.url.includes('/portfolio/') || event.request.url.includes('/logo') || event.request.url.includes('.css'))
+          (event.request.url.includes('res.cloudinary.com') || event.request.url.includes('/logo') || event.request.url.includes('.css'))
         ) {
           const responseToCache = networkResponse.clone();
           caches.open(CACHE_NAME).then((cache) => {

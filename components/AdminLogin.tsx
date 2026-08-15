@@ -56,7 +56,7 @@ export default function AdminLogin() {
           </div>
 
           <h2 className="text-xl font-extrabold text-slate-900 mt-1">Connexion Administrateur</h2>
-          <p className="text-xs text-slate-500 font-semibold mt-1">Entrez votre clé d'accès pour gérer le studio</p>
+          <p className="text-xs text-slate-500 font-semibold mt-1">Entrez votre clé d’accès pour gérer le studio</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">

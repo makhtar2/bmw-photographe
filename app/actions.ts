@@ -2,7 +2,7 @@
 
 import { bookingSchema, BookingInput } from "../lib/schema";
 import { getDb, writeDb, Booking, PricesSettings, PortfolioItem, EventPromo } from "../lib/db";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 
 export type ActionState = {
@@ -33,7 +33,7 @@ export async function submitBooking(data: BookingInput): Promise<ActionState> {
   db.bookings.unshift(newBooking);
   await writeDb(db);
 
-  const whatsappPhone = "221762588808";
+  const whatsappPhone = process.env.WHATSAPP_PHONE || "221762588808";
   const message = `Bonjour, c'est ${v.name}.
 
 Je souhaite réserver la formule : ${v.formula} (${v.location}).
@@ -50,10 +50,36 @@ Ci-joint le reçu de mon paiement d'acompte.`;
 }
 
 // ── AUTH ADMIN ──
-const ADMIN_PASSWORD = "bmw2026";
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+
+// Anti brute-force basique : quelques tentatives par IP sur une fenêtre glissante.
+// Best-effort seulement (compteur en mémoire, non partagé entre instances serverless),
+// mais suffisant pour décourager un brute force naïf sur ce trafic modeste.
+const LOGIN_MAX_ATTEMPTS = 5;
+const LOGIN_WINDOW_MS = 15 * 60 * 1000;
+const loginAttempts = new Map<string, { count: number; resetAt: number }>();
+
+function getClientIp(): string {
+  const h = headers();
+  return h.get("x-forwarded-for")?.split(",")[0].trim() || h.get("x-real-ip") || "unknown";
+}
 
 export async function loginAdmin(password: string): Promise<{ success: boolean; message?: string }> {
+  if (!ADMIN_PASSWORD) {
+    console.error("[loginAdmin] ADMIN_PASSWORD n'est pas configuré — accès admin refusé.");
+    return { success: false, message: "Connexion admin indisponible (configuration manquante)." };
+  }
+
+  const ip = getClientIp();
+  const now = Date.now();
+  const entry = loginAttempts.get(ip);
+
+  if (entry && entry.resetAt > now && entry.count >= LOGIN_MAX_ATTEMPTS) {
+    return { success: false, message: "Trop de tentatives. Réessayez dans quelques minutes." };
+  }
+
   if (password === ADMIN_PASSWORD) {
+    loginAttempts.delete(ip);
     cookies().set("bmw_admin_session", "authenticated", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -62,6 +88,13 @@ export async function loginAdmin(password: string): Promise<{ success: boolean; 
     });
     return { success: true };
   }
+
+  if (!entry || entry.resetAt <= now) {
+    loginAttempts.set(ip, { count: 1, resetAt: now + LOGIN_WINDOW_MS });
+  } else {
+    entry.count += 1;
+  }
+
   return { success: false, message: "Mot de passe incorrect" };
 }
 

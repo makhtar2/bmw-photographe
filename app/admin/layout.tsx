@@ -4,6 +4,7 @@ export const metadata: Metadata = {
   title: "Admin Dashboard - BMW Photographe",
   description: "Espace Administration & Gestion des Réservations",
   manifest: "/manifest.webmanifest",
+  robots: { index: false, follow: false, nocache: true },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",

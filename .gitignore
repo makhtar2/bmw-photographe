@@ -19,6 +19,9 @@ yarn-error.log*
 .env*.local
 .env
 
+# base de données JSON locale (contient des données clients réelles)
+/data/db.json
+
 # vercel & netlify
 .vercel
 .netlify

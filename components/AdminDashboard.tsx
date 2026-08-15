@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { logoutAdmin, updatePricesSettings, updateBookingStatus, deleteBooking, addBookingAdmin, updateBookingFull, addPortfolioItem, deletePortfolioItem, updatePortfolioItem, updatePromoOffer } from "../app/actions";
 import { PricesSettings, Booking, PortfolioItem, EventPromo } from "../lib/db";
+import { DEFAULT_PROMO } from "../lib/defaults";
 import {
   LogOut,
   Settings,
@@ -147,26 +148,7 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
   const [settings, setSettings] = useState<PricesSettings>(initialSettings);
   const [bookings, setBookings] = useState<Booking[]>(initialBookings);
   const [portfolio, setPortfolio] = useState<PortfolioItem[]>(initialPortfolio);
-  const [promo, setPromo] = useState<EventPromo>(initialPromo || {
-    enabled: true,
-    eventName: "Spécial Gamou",
-    subtitle: "Profitez de réductions exclusives sur vos séances photo pour le Gamou !",
-    badgeText: "PROMO GAMOU",
-    promoPrices: {
-      studio_5: 8000,
-      studio_7: 12000,
-      studio_10: 16000,
-      studio_15: 25000,
-      studio_20: 42000,
-      exterieur_5: 20000,
-      exterieur_10: 35000,
-      ceremonie_80: 95000,
-      ceremonie_100: 110000,
-      ceremonie_120: 135000,
-      ceremonie_tak_diaka: 75000,
-      option_video: 12000,
-    }
-  });
+  const [promo, setPromo] = useState<EventPromo>(initialPromo || DEFAULT_PROMO);
 
   const [isPending, startTransition] = useTransition();
 
@@ -266,7 +248,13 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
     }
   };
 
-  // POLLING EN TEMPS RÉEL
+  // POLLING EN TEMPS RÉEL — garde la dernière valeur de l'onglet actif sans
+  // provoquer un nouvel abonnement de l'intervalle à chaque changement d'onglet.
+  const activeTabRef = useRef(activeTab);
+  useEffect(() => {
+    activeTabRef.current = activeTab;
+  }, [activeTab]);
+
   const fetchLatestData = useCallback(async () => {
     try {
       const res = await fetch("/api/admin", { cache: "no-store" });
@@ -290,6 +278,17 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
 
       lastBookingCountRef.current = data.bookings.length;
       setBookings(data.bookings);
+      // Le portfolio n'a pas d'état "brouillon" attaché aux cartes affichées :
+      // on peut toujours le resynchroniser sans risque d'écraser une saisie en cours.
+      if (data.portfolio) setPortfolio(data.portfolio);
+
+      // Les tarifs et la promo sont liés à des formulaires éditables : on ne les
+      // resynchronise que si l'admin n'est pas en train de les modifier, pour ne
+      // jamais écraser une saisie en cours sur l'onglet "Tarifs".
+      if (activeTabRef.current !== "prices") {
+        if (data.settings) setSettings(data.settings);
+        if (data.promo) setPromo(data.promo);
+      }
     } catch (e) { }
   }, []);
 
@@ -328,25 +327,8 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
     window.location.reload();
   };
 
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const cachedSettings = localStorage.getItem("bmw_custom_settings");
-      if (cachedSettings) {
-        try {
-          const parsed = JSON.parse(cachedSettings);
-          if (parsed && typeof parsed === "object") {
-            setSettings(prev => ({ ...prev, ...parsed }));
-          }
-        } catch {}
-      }
-    }
-  }, []);
-
   const handleUpdatePrices = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (typeof window !== "undefined") {
-      localStorage.setItem("bmw_custom_settings", JSON.stringify(settings));
-    }
     startTransition(async () => {
       const res = await updatePricesSettings(settings);
       if (res.success) {
@@ -450,6 +432,9 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
         if (res.success && res.id) {
           triggerNotification("success", "Séance planifiée avec succès !");
           setBookings([{ id: res.id, ...bookingForm, createdAt: new Date().toISOString() }, ...bookings]);
+          // Évite qu'un poll dans les 4s suivantes ne déclenche une fausse
+          // alerte "Nouveau client" pour la réservation qu'on vient de créer soi-même.
+          lastBookingCountRef.current += 1;
           setIsBookingModalOpen(false);
         } else triggerNotification("error", res.message || "Erreur");
       }
@@ -591,7 +576,9 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
         const val = parseInt(match[1].replace(/\s+/g, "")) || 0;
         return acc + val;
       }
-      return acc + 15000;
+      // Formule libre sans prix détectable (ex: réservation manuelle) : on ne
+      // devine pas un montant, pour ne pas fausser silencieusement le total.
+      return acc;
     }, 0);
 
   return (
@@ -1053,7 +1040,7 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
                   onClick={() => setAgendaDate(new Date())}
                   className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-extrabold transition-colors"
                 >
-                  Aujourd'hui
+                  Aujourd’hui
                 </button>
               </div>
 
@@ -1294,7 +1281,7 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
             <div className="mb-6 border-b border-slate-100 pb-4">
               <span className="text-[11px] font-extrabold uppercase tracking-widest text-[--brand]">Tarifs &amp; Gestion</span>
               <h3 className="text-2xl font-extrabold text-slate-900 mt-1">Grille Tarifaire du Studio</h3>
-              <p className="text-xs text-slate-500 font-semibold mt-1">Modifiez directement vos tarifs ci-dessous. Les changements s'appliquent instantanément sur le site.</p>
+              <p className="text-xs text-slate-500 font-semibold mt-1">Modifiez directement vos tarifs ci-dessous. Les changements s’appliquent instantanément sur le site.</p>
             </div>
 
             <form onSubmit={handleUpdatePrices} className="space-y-8">
@@ -1405,7 +1392,7 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
                   <h3 className="text-xl font-extrabold text-slate-900 flex items-center gap-2 mt-0.5">
                     <Tag className="w-5 h-5 text-[--brand]" /> Promo Événementielle (ex: Gamou, Tabaski, Korité...)
                   </h3>
-                  <p className="text-xs text-slate-500 font-semibold">Configurez vos offres de saison (Gamou, Tabaski, Magal) et ajustez vos tarifs directement pour l'ensemble du studio.</p>
+                  <p className="text-xs text-slate-500 font-semibold">Configurez vos offres de saison (Gamou, Tabaski, Magal) et ajustez vos tarifs directement pour l’ensemble du studio.</p>
                 </div>
 
                 <label className="relative inline-flex items-center cursor-pointer">
@@ -1425,7 +1412,7 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
               <form onSubmit={handleSavePromo} className="space-y-6 bg-slate-50 p-5 rounded-2xl border border-slate-200">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-extrabold text-slate-600 mb-1.5">Nom de l'Événement *</label>
+                    <label className="block text-xs font-extrabold text-slate-600 mb-1.5">Nom de l’Événement *</label>
                     <input
                       type="text"
                       required
@@ -1437,7 +1424,7 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
                   </div>
 
                   <div>
-                    <label className="block text-xs font-extrabold text-slate-600 mb-1.5">Badge d'Affichage *</label>
+                    <label className="block text-xs font-extrabold text-slate-600 mb-1.5">Badge d’Affichage *</label>
                     <input
                       type="text"
                       required
@@ -1463,7 +1450,7 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
                 {/* Saisie des tarifs promo pour chaque formule */}
                 <div className="space-y-4 pt-4 border-t border-slate-200">
                   <h4 className="text-xs uppercase font-extrabold text-[--brand] tracking-wider">
-                    Tarifs réduits pendant l'événement (en FCFA)
+                    Tarifs réduits pendant l’événement (en FCFA)
                   </h4>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -1509,7 +1496,7 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
                   className="w-full py-3.5 px-4 bg-[--brand] text-white hover:bg-slate-900 transition-all rounded-xl text-xs uppercase tracking-wider font-extrabold flex items-center justify-center gap-2 shadow-md disabled:opacity-50 min-w-0"
                 >
                   <Tag className="w-4 h-4 shrink-0" />
-                  <span className="truncate">Enregistrer l'Offre Promo</span>
+                  <span className="truncate">Enregistrer l’Offre Promo</span>
                 </button>
               </form>
 

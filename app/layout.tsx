@@ -17,6 +17,7 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://bmwphotographe.vercel.app"),
   title: "BMW Photographe | Studio Photo à Thiès — Disponible partout au Sénégal",
   description: "Séances photo studio, extérieur et cérémonies. Photographe professionnel basé à Thiès Médina Fall, disponible partout au Sénégal (Dakar, Mbour, Saint-Louis, Ziguinchor).",
   keywords: [

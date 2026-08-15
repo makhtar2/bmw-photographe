@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { bookingSchema, BookingInput } from "../lib/schema";
@@ -17,22 +17,7 @@ export default function BookingForm({ settings, id = "reservation" }: BookingFor
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
-  const [activeSettings, setActiveSettings] = useState<PricesSettings>(settings);
-
-  useEffect(() => {
-    setActiveSettings(settings);
-    if (typeof window !== "undefined") {
-      const cached = localStorage.getItem("bmw_custom_settings");
-      if (cached) {
-        try {
-          const parsed = JSON.parse(cached);
-          if (parsed && typeof parsed === "object") {
-            setActiveSettings(prev => ({ ...prev, ...parsed }));
-          }
-        } catch {}
-      }
-    }
-  }, [settings]);
+  const activeSettings = settings;
 
   const {
     register,

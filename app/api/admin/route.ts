@@ -17,5 +17,6 @@ export async function GET() {
     bookings: db.bookings,
     settings: db.settings,
     portfolio: db.portfolio,
+    promo: db.promo,
   });
 }

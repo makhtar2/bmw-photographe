@@ -1,5 +1,6 @@
 import fs from "fs/promises";
 import path from "path";
+import { DEFAULT_PROMO } from "./defaults";
 
 // Définition du chemin du fichier JSON de base de données
 const DB_FILE = path.join(process.cwd(), "data", "db.json");
@@ -169,56 +170,19 @@ const defaultDatabase: Database = {
     },
   ],
   bookings: [],
-  promo: {
-    enabled: true,
-    eventName: "Spécial Gamou",
-    subtitle: "Profitez de réductions exclusives sur vos séances photo pour le Gamou !",
-    badgeText: "PROMO GAMOU",
-    promoPrices: {
-      studio_5: 8000,
-      studio_7: 12000,
-      studio_10: 16000,
-      studio_15: 25000,
-      studio_20: 42000,
-      exterieur_5: 20000,
-      exterieur_10: 35000,
-      ceremonie_80: 95000,
-      ceremonie_100: 110000,
-      ceremonie_120: 135000,
-      ceremonie_tak_diaka: 75000,
-      option_video: 12000,
-    },
-  },
+  promo: DEFAULT_PROMO,
 };
 
-// Initialisation automatique des assets (logo et images)
+// Initialisation automatique des dossiers d'assets
 async function initAssets() {
   const publicDir = path.join(process.cwd(), "public");
   const portfolioDir = path.join(publicDir, "portfolio");
   
-  // S'assurer que les dossiers existent
-  await fs.mkdir(portfolioDir, { recursive: true });
-  
-  const filesToCopy = [
-    { src: "/home/almuxtaar/.gemini/antigravity/brain/93d24a8d-6093-46f5-8bcd-743fc734d0c1/media__1786667862052.png", dest: "logo.png" },
-    { src: "/home/almuxtaar/.gemini/antigravity/brain/93d24a8d-6093-46f5-8bcd-743fc734d0c1/media__1786667862052.png", dest: "logo-square.png" },
-    { src: "/home/almuxtaar/.gemini/antigravity/brain/93d24a8d-6093-46f5-8bcd-743fc734d0c1/media__1786667862052.png", dest: "icon-192.png" },
-    { src: "/home/almuxtaar/.gemini/antigravity/brain/93d24a8d-6093-46f5-8bcd-743fc734d0c1/media__1786667862052.png", dest: "icon-512.png" },
-    { src: "/home/almuxtaar/.gemini/antigravity/brain/93d24a8d-6093-46f5-8bcd-743fc734d0c1/media__1786667862052.png", dest: "icon-maskable.png" },
-  ];
-  
-  for (const file of filesToCopy) {
-    const destPath = path.join(publicDir, file.dest);
-    try {
-      await fs.access(destPath);
-    } catch {
-      try {
-        await fs.copyFile(file.src, destPath);
-        console.log(`[AutoSetup] Copié : ${file.src} -> ${destPath}`);
-      } catch (err) {
-        console.error(`[AutoSetup] Erreur de copie de ${file.src} vers ${destPath}:`, err);
-      }
-    }
+  // S'assurer que le dossier portfolio existe
+  try {
+    await fs.mkdir(portfolioDir, { recursive: true });
+  } catch (err) {
+    console.error("[initAssets] Erreur de création du dossier portfolio:", err);
   }
 }
 

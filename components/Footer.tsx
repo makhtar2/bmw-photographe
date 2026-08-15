@@ -13,6 +13,9 @@ export default function Footer() {
     return null;
   }
 
+  const whatsappPhone = process.env.NEXT_PUBLIC_WHATSAPP_PHONE || "221762588808";
+  const displayPhone = process.env.NEXT_PUBLIC_DISPLAY_PHONE || "+221 76 258 88 08";
+
   return (
     <footer className="bg-slate-950 text-slate-400 border-t border-slate-900 px-5 md:px-10 pt-16 pb-28 md:pb-16 relative z-10">
       <div className="max-w-[1400px] mx-auto grid grid-cols-1 md:grid-cols-12 gap-10">
@@ -32,7 +35,7 @@ export default function Footer() {
           </p>
           <div className="flex items-center gap-3">
             <a 
-              href="https://wa.me/221762588808" 
+              href={`https://wa.me/${whatsappPhone}`} 
               target="_blank" 
               rel="noreferrer"
               className="w-10 h-10 rounded-full bg-slate-900 border border-slate-800 hover:border-[--brand] hover:text-white flex items-center justify-center transition-colors"
@@ -50,7 +53,7 @@ export default function Footer() {
               <MaterialIcon name="photo_camera" className="text-lg" />
             </a>
             <a 
-              href="tel:+221762588808"
+              href={`tel:+${whatsappPhone}`}
               className="w-10 h-10 rounded-full bg-slate-900 border border-slate-800 hover:border-[--brand] hover:text-white flex items-center justify-center transition-colors"
               aria-label="Appeler"
             >
@@ -88,8 +91,8 @@ export default function Footer() {
             </div>
             <div className="flex items-center gap-3">
               <MaterialIcon name="call" className="text-[--brand] text-lg" />
-              <a href="tel:+221762588808" className="hover:text-white transition-colors font-extrabold">
-                +221 76 258 88 08
+              <a href={`tel:+${whatsappPhone}`} className="hover:text-white transition-colors font-extrabold">
+                {displayPhone}
               </a>
             </div>
             <div className="flex items-center gap-3">
