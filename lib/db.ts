@@ -1,5 +1,5 @@
 import { Redis } from "@upstash/redis";
-import { DEFAULT_PROMO, DEFAULT_LABELS } from "./defaults";
+import { DEFAULT_PROMO } from "./defaults";
 
 export interface PortfolioItem {
   id: number;
@@ -8,6 +8,7 @@ export interface PortfolioItem {
   category: "studio" | "exterior";
   aspectClass: string;
   title: string;
+  featured?: boolean; // affichée dans le diaporama Hero de la page d'accueil
 }
 
 export interface Booking {
@@ -22,36 +23,35 @@ export interface Booking {
   time?: string; // HH:mm
 }
 
-export interface PricesSettings {
-  studio_5: number;
-  studio_7: number;
-  studio_10: number;
-  studio_15: number;
-  studio_20: number;
-  exterieur_5: number;
-  exterieur_10: number;
-  ceremonie_80: number;
-  ceremonie_100: number;
-  ceremonie_120: number;
-  ceremonie_tak_diaka: number;
-  option_video: number;
+// Une formule tarifaire (ex: "5 photos" à 10 000 FCFA). L'admin peut en
+// ajouter, en supprimer ou en modifier librement dans chaque catégorie —
+// rien n'est figé à un nombre fixe de formules.
+export interface PricePackage {
+  id: string;
+  label: string;
+  price: number;
 }
 
-// Libellé affiché pour chaque formule (ex: "5 photos"), éditable depuis
-// l'admin indépendamment du prix.
-export type PackageLabels = Record<keyof PricesSettings, string>;
+export interface PricesSettings {
+  studio: PricePackage[];
+  exterieur: PricePackage[];
+  ceremonie: PricePackage[];
+  optionVideoLabel: string;
+  optionVideoPrice: number;
+}
 
 export interface EventPromo {
   enabled: boolean;
   eventName: string;
   subtitle: string;
   badgeText: string;
-  promoPrices: Partial<PricesSettings>;
+  // Prix promo par identifiant de formule (PricePackage.id)
+  promoPrices: Record<string, number>;
+  promoOptionVideoPrice?: number;
 }
 
 export interface Database {
   settings: PricesSettings;
-  labels: PackageLabels;
   portfolio: PortfolioItem[];
   bookings: Booking[];
   promo?: EventPromo;
@@ -59,20 +59,26 @@ export interface Database {
 
 const defaultDatabase: Database = {
   settings: {
-    studio_5: 10000,
-    studio_7: 15000,
-    studio_10: 20000,
-    studio_15: 30000,
-    studio_20: 50000,
-    exterieur_5: 25000,
-    exterieur_10: 40000,
-    ceremonie_80: 110000,
-    ceremonie_100: 125000,
-    ceremonie_120: 150000,
-    ceremonie_tak_diaka: 85000,
-    option_video: 15000,
+    studio: [
+      { id: "studio_5", label: "5 photos", price: 10000 },
+      { id: "studio_7", label: "7 photos", price: 15000 },
+      { id: "studio_10", label: "10 photos", price: 20000 },
+      { id: "studio_15", label: "15 photos", price: 30000 },
+      { id: "studio_20", label: "20 photos", price: 50000 },
+    ],
+    exterieur: [
+      { id: "exterieur_5", label: "5 photos", price: 25000 },
+      { id: "exterieur_10", label: "10 photos", price: 40000 },
+    ],
+    ceremonie: [
+      { id: "ceremonie_80", label: "80 photos", price: 110000 },
+      { id: "ceremonie_100", label: "100 photos", price: 125000 },
+      { id: "ceremonie_120", label: "120 photos", price: 150000 },
+      { id: "ceremonie_tak_diaka", label: "Pack Tak Diaka · 60 photos", price: 85000 },
+    ],
+    optionVideoLabel: "Vidéo cinématique",
+    optionVideoPrice: 15000,
   },
-  labels: DEFAULT_LABELS,
   portfolio: [
     {
       id: 1,
@@ -191,18 +197,73 @@ function getRedis(): Redis {
   return _redis;
 }
 
+// Ancien libellés par défaut (formats précédents), utilisés uniquement
+// comme repli lors de la migration de données existantes.
+const LEGACY_DEFAULT_LABELS: Record<string, string> = {
+  studio_5: "5 photos", studio_7: "7 photos", studio_10: "10 photos",
+  studio_15: "15 photos", studio_20: "20 photos",
+  exterieur_5: "5 photos", exterieur_10: "10 photos",
+  ceremonie_80: "80 photos", ceremonie_100: "100 photos", ceremonie_120: "120 photos",
+  ceremonie_tak_diaka: "Pack Tak Diaka · 60 photos",
+  option_video: "Vidéo cinématique",
+};
+
+// Migre les anciens formats de `settings` (nombre fixe de formules codées en
+// dur, avec ou sans `labels` séparés) vers le format actuel en tableaux
+// libres. Les identifiants sont conservés à l'identique, donc les prix promo
+// existants (déjà indexés par ces mêmes identifiants) restent valides sans
+// transformation.
+function migrateSettings(raw: any): PricesSettings {
+  if (raw && Array.isArray(raw.studio)) {
+    return raw as PricesSettings;
+  }
+
+  const oldSettings = raw || {};
+  const oldLabels = raw?.__labels || {};
+
+  const pkg = (id: string, fallbackLabel: string, fallbackPrice: number): PricePackage => ({
+    id,
+    label: oldLabels[id] || LEGACY_DEFAULT_LABELS[id] || fallbackLabel,
+    price: typeof oldSettings[id] === "number" ? oldSettings[id] : fallbackPrice,
+  });
+
+  return {
+    studio: [
+      pkg("studio_5", "5 photos", 10000),
+      pkg("studio_7", "7 photos", 15000),
+      pkg("studio_10", "10 photos", 20000),
+      pkg("studio_15", "15 photos", 30000),
+      pkg("studio_20", "20 photos", 50000),
+    ],
+    exterieur: [
+      pkg("exterieur_5", "5 photos", 25000),
+      pkg("exterieur_10", "10 photos", 40000),
+    ],
+    ceremonie: [
+      pkg("ceremonie_80", "80 photos", 110000),
+      pkg("ceremonie_100", "100 photos", 125000),
+      pkg("ceremonie_120", "120 photos", 150000),
+      pkg("ceremonie_tak_diaka", "Pack Tak Diaka · 60 photos", 85000),
+    ],
+    optionVideoLabel: oldLabels.option_video || LEGACY_DEFAULT_LABELS.option_video,
+    optionVideoPrice: typeof oldSettings.option_video === "number" ? oldSettings.option_video : 15000,
+  };
+}
+
 // Lire la base de données depuis Redis (partagée entre toutes les instances
 // serverless — contrairement à un fichier local, qui n'est pas fiable sur
 // Vercel car chaque instance a son propre système de fichiers éphémère).
 export async function getDb(): Promise<Database> {
   const redis = getRedis();
-  const data = await redis.get<Database>(DB_KEY);
+  const data = await redis.get<any>(DB_KEY);
 
   if (data) {
-    // Rétrocompatibilité : les entrées écrites avant l'ajout des libellés
-    // de formules n'ont pas ce champ.
-    if (!data.labels) data.labels = DEFAULT_LABELS;
-    return data;
+    // Rétrocompatibilité : migre à la volée les anciens formats de tarifs
+    // (les `labels` séparés, s'ils existent, servent de repli puis sont
+    // absorbés dans chaque formule).
+    const settings = migrateSettings({ ...data.settings, __labels: data.labels });
+    const { labels, ...rest } = data;
+    return { ...rest, settings } as Database;
   }
 
   // Première utilisation : on amorce Redis avec la base par défaut.

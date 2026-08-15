@@ -1,7 +1,7 @@
 "use server";
 
 import { bookingSchema, BookingInput } from "../lib/schema";
-import { getDb, writeDb, Booking, PricesSettings, PackageLabels, PortfolioItem, EventPromo } from "../lib/db";
+import { getDb, writeDb, Booking, PricesSettings, PortfolioItem, EventPromo } from "../lib/db";
 import { cookies, headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 
@@ -113,12 +113,11 @@ async function ensureAdminAuth() {
 }
 
 // ── TARIFS ──
-export async function updatePricesSettings(settings: PricesSettings, labels: PackageLabels): Promise<{ success: boolean; message?: string }> {
+export async function updatePricesSettings(settings: PricesSettings): Promise<{ success: boolean; message?: string }> {
   try {
     await ensureAdminAuth();
     const db = await getDb();
     db.settings = settings;
-    db.labels = labels;
     await writeDb(db);
     revalidatePath("/");
     revalidatePath("/admin");

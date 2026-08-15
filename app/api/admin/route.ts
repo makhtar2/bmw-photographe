@@ -16,7 +16,6 @@ export async function GET() {
   return NextResponse.json({
     bookings: db.bookings,
     settings: db.settings,
-    labels: db.labels,
     portfolio: db.portfolio,
     promo: db.promo,
   });

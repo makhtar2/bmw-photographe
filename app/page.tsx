@@ -7,7 +7,9 @@ import BookingForm from "../components/BookingForm";
 import { getDb } from "../lib/db";
 
 export default async function Home() {
-  const { settings, labels, portfolio, promo } = await getDb();
+  const { settings, portfolio, promo } = await getDb();
+  const featuredPortfolio = portfolio.filter((p) => p.featured);
+  const heroImages = featuredPortfolio.length > 0 ? featuredPortfolio : portfolio;
 
   return (
     <main className="min-h-screen bg-slate-50">
@@ -102,7 +104,7 @@ export default async function Home() {
             </div>
 
             <div className="order-1 relative aspect-[4/5] overflow-hidden rounded-2xl border border-slate-200 bg-white p-3 shadow-sm lg:order-2">
-              <HeroSlideshow images={portfolio} />
+              <HeroSlideshow images={heroImages} />
             </div>
 
           </div>
@@ -219,29 +221,23 @@ export default async function Home() {
                 )}
                 <h3 className="text-base font-extrabold text-slate-900 uppercase tracking-wide mb-5">En studio</h3>
                 <div className="space-y-3">
-                  {[
-                    { key: "studio_5" as const,  label: labels.studio_5,  price: settings.studio_5 },
-                    { key: "studio_7" as const,  label: labels.studio_7,  price: settings.studio_7 },
-                    { key: "studio_10" as const, label: labels.studio_10, price: settings.studio_10 },
-                    { key: "studio_15" as const, label: labels.studio_15, price: settings.studio_15 },
-                    { key: "studio_20" as const, label: labels.studio_20, price: settings.studio_20 },
-                  ].map((row) => {
-                    const promoVal = promo?.enabled ? promo.promoPrices[row.key] : undefined;
-                    const hasDiscount = promoVal && promoVal < row.price;
+                  {settings.studio.map((pkg) => {
+                    const promoVal = promo?.enabled ? promo.promoPrices[pkg.id] : undefined;
+                    const hasDiscount = promoVal !== undefined && promoVal < pkg.price;
                     return (
-                      <div key={row.key} className="flex items-center justify-between border-b border-slate-200 pb-3 last:border-0 last:pb-0">
-                        <span className="text-sm font-semibold text-slate-600">{row.label}</span>
+                      <div key={pkg.id} className="flex items-center justify-between border-b border-slate-200 pb-3 last:border-0 last:pb-0">
+                        <span className="text-sm font-semibold text-slate-600">{pkg.label}</span>
                         <div>
                           {hasDiscount ? (
                             <>
-                              <del className="text-xs font-bold text-slate-400 mr-2">{row.price.toLocaleString("fr-FR")} FCFA</del>
+                              <del className="text-xs font-bold text-slate-400 mr-2">{pkg.price.toLocaleString("fr-FR")} FCFA</del>
                               <strong className="text-sm font-extrabold text-[--brand]">
-                                {promoVal.toLocaleString("fr-FR")} <small className="font-bold text-slate-400 text-[11px]">FCFA</small>
+                                {promoVal!.toLocaleString("fr-FR")} <small className="font-bold text-slate-400 text-[11px]">FCFA</small>
                               </strong>
                             </>
                           ) : (
                             <strong className="text-sm font-extrabold text-slate-900">
-                              {row.price.toLocaleString("fr-FR")} <small className="font-bold text-slate-400 text-[11px]">FCFA</small>
+                              {pkg.price.toLocaleString("fr-FR")} <small className="font-bold text-slate-400 text-[11px]">FCFA</small>
                             </strong>
                           )}
                         </div>
@@ -260,26 +256,23 @@ export default async function Home() {
                 )}
                 <h3 className="text-base font-extrabold text-slate-900 uppercase tracking-wide mb-5">En extérieur</h3>
                 <div className="space-y-3">
-                  {[
-                    { key: "exterieur_5" as const,  label: labels.exterieur_5,  price: settings.exterieur_5 },
-                    { key: "exterieur_10" as const, label: labels.exterieur_10, price: settings.exterieur_10 },
-                  ].map((row) => {
-                    const promoVal = promo?.enabled ? promo.promoPrices[row.key] : undefined;
-                    const hasDiscount = promoVal && promoVal < row.price;
+                  {settings.exterieur.map((pkg) => {
+                    const promoVal = promo?.enabled ? promo.promoPrices[pkg.id] : undefined;
+                    const hasDiscount = promoVal !== undefined && promoVal < pkg.price;
                     return (
-                      <div key={row.key} className="flex items-center justify-between border-b border-slate-200 pb-3 last:border-0 last:pb-0">
-                        <span className="text-sm font-semibold text-slate-600">{row.label}</span>
+                      <div key={pkg.id} className="flex items-center justify-between border-b border-slate-200 pb-3 last:border-0 last:pb-0">
+                        <span className="text-sm font-semibold text-slate-600">{pkg.label}</span>
                         <div>
                           {hasDiscount ? (
                             <>
-                              <del className="text-xs font-bold text-slate-400 mr-2">{row.price.toLocaleString("fr-FR")} FCFA</del>
+                              <del className="text-xs font-bold text-slate-400 mr-2">{pkg.price.toLocaleString("fr-FR")} FCFA</del>
                               <strong className="text-sm font-extrabold text-[--brand]">
-                                {promoVal.toLocaleString("fr-FR")} <small className="font-bold text-slate-400 text-[11px]">FCFA</small>
+                                {promoVal!.toLocaleString("fr-FR")} <small className="font-bold text-slate-400 text-[11px]">FCFA</small>
                               </strong>
                             </>
                           ) : (
                             <strong className="text-sm font-extrabold text-slate-900">
-                              {row.price.toLocaleString("fr-FR")} <small className="font-bold text-slate-400 text-[11px]">FCFA</small>
+                              {pkg.price.toLocaleString("fr-FR")} <small className="font-bold text-slate-400 text-[11px]">FCFA</small>
                             </strong>
                           )}
                         </div>
@@ -303,28 +296,23 @@ export default async function Home() {
                 <p className="text-slate-400 text-sm font-semibold mt-1">Fichiers retouchés, livrés après votre événement.</p>
               </div>
               <div className="space-y-3 mb-5">
-                {[
-                  { key: "ceremonie_80" as const,         label: labels.ceremonie_80,         price: settings.ceremonie_80 },
-                  { key: "ceremonie_100" as const,        label: labels.ceremonie_100,        price: settings.ceremonie_100 },
-                  { key: "ceremonie_120" as const,        label: labels.ceremonie_120,        price: settings.ceremonie_120 },
-                  { key: "ceremonie_tak_diaka" as const,  label: labels.ceremonie_tak_diaka,  price: settings.ceremonie_tak_diaka },
-                ].map((row) => {
-                  const promoVal = promo?.enabled ? promo.promoPrices[row.key] : undefined;
-                  const hasDiscount = promoVal && promoVal < row.price;
+                {settings.ceremonie.map((pkg) => {
+                  const promoVal = promo?.enabled ? promo.promoPrices[pkg.id] : undefined;
+                  const hasDiscount = promoVal !== undefined && promoVal < pkg.price;
                   return (
-                    <div key={row.key} className="flex items-center justify-between border-b border-slate-800 pb-3 last:border-0 last:pb-0">
-                      <span className="text-sm font-semibold text-slate-300">{row.label}</span>
+                    <div key={pkg.id} className="flex items-center justify-between border-b border-slate-800 pb-3 last:border-0 last:pb-0">
+                      <span className="text-sm font-semibold text-slate-300">{pkg.label}</span>
                       <div>
                         {hasDiscount ? (
                           <>
-                            <del className="text-xs font-bold text-slate-500 mr-2">{row.price.toLocaleString("fr-FR")} FCFA</del>
+                            <del className="text-xs font-bold text-slate-500 mr-2">{pkg.price.toLocaleString("fr-FR")} FCFA</del>
                             <strong className="text-sm font-extrabold text-amber-400">
-                              {promoVal.toLocaleString("fr-FR")} <small className="font-bold text-slate-500 text-[11px]">FCFA</small>
+                              {promoVal!.toLocaleString("fr-FR")} <small className="font-bold text-slate-500 text-[11px]">FCFA</small>
                             </strong>
                           </>
                         ) : (
                           <strong className="text-sm font-extrabold text-white">
-                            {row.price.toLocaleString("fr-FR")} <small className="font-bold text-slate-500 text-[11px]">FCFA</small>
+                            {pkg.price.toLocaleString("fr-FR")} <small className="font-bold text-slate-500 text-[11px]">FCFA</small>
                           </strong>
                         )}
                       </div>
@@ -336,10 +324,13 @@ export default async function Home() {
               <div className="flex items-center justify-between rounded-xl bg-slate-800/60 px-4 py-3">
                 <div>
                   <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-500">Option</span>
-                  <p className="text-sm font-extrabold text-white">{labels.option_video}</p>
+                  <p className="text-sm font-extrabold text-white">{settings.optionVideoLabel}</p>
                 </div>
                 <p className="text-sm font-extrabold text-white">
-                  {settings.option_video.toLocaleString("fr-FR")} <small className="font-bold text-slate-500 text-[11px]">FCFA</small>
+                  {(promo?.enabled && promo.promoOptionVideoPrice !== undefined && promo.promoOptionVideoPrice < settings.optionVideoPrice
+                    ? promo.promoOptionVideoPrice
+                    : settings.optionVideoPrice
+                  ).toLocaleString("fr-FR")} <small className="font-bold text-slate-500 text-[11px]">FCFA</small>
                 </p>
               </div>
             </div>
@@ -355,7 +346,7 @@ export default async function Home() {
 
       {/* ════════ RESERVATION SECTION ════════ */}
       <div id="reservation" className="scroll-mt-24">
-        <BookingForm settings={settings} labels={labels} />
+        <BookingForm settings={settings} />
       </div>
     </main>
   );

@@ -6,21 +6,17 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { bookingSchema, BookingInput } from "../lib/schema";
 import { submitBooking } from "../app/actions";
 import MaterialIcon from "./MaterialIcon";
-import { PricesSettings, PackageLabels } from "../lib/db";
-import { DEFAULT_LABELS } from "../lib/defaults";
+import { PricesSettings, PricePackage } from "../lib/db";
 
 interface BookingFormProps {
   settings: PricesSettings;
-  labels?: PackageLabels;
   id?: string;
 }
 
-export default function BookingForm({ settings, labels, id = "reservation" }: BookingFormProps) {
+export default function BookingForm({ settings, id = "reservation" }: BookingFormProps) {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
-  const activeSettings = settings;
-  const activeLabels = labels || DEFAULT_LABELS;
 
   const {
     register,
@@ -34,32 +30,13 @@ export default function BookingForm({ settings, labels, id = "reservation" }: Bo
 
   const loc = watch("location");
 
-  const formulaOption = (key: keyof PricesSettings) => {
-    const text = `${activeLabels[key]} — ${activeSettings[key].toLocaleString("fr-FR")} FCFA`;
+  const formulaOption = (pkg: PricePackage) => {
+    const text = `${pkg.label} — ${pkg.price.toLocaleString("fr-FR")} FCFA`;
     return { value: text, label: text };
   };
 
-  const studioFormulas = [
-    formulaOption("studio_5"),
-    formulaOption("studio_7"),
-    formulaOption("studio_10"),
-    formulaOption("studio_15"),
-    formulaOption("studio_20"),
-  ];
-
-  const domicileFormulas = [
-    formulaOption("exterieur_5"),
-    formulaOption("exterieur_10"),
-  ];
-
-  const mariageFormulas = [
-    formulaOption("ceremonie_80"),
-    formulaOption("ceremonie_100"),
-    formulaOption("ceremonie_120"),
-    formulaOption("ceremonie_tak_diaka"),
-  ];
-
-  const formulas = loc === "Studio" ? studioFormulas : loc === "Domicile" ? domicileFormulas : mariageFormulas;
+  const packages = loc === "Studio" ? settings.studio : loc === "Domicile" ? settings.exterieur : settings.ceremonie;
+  const formulas = packages.map(formulaOption);
 
   const onSubmit = async (data: BookingInput) => {
     setPending(true);

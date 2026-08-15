@@ -4,8 +4,8 @@ import { useState, useTransition, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { logoutAdmin, updatePricesSettings, updateBookingStatus, deleteBooking, addBookingAdmin, updateBookingFull, addPortfolioItem, deletePortfolioItem, updatePortfolioItem, updatePromoOffer } from "../app/actions";
-import { PricesSettings, PackageLabels, Booking, PortfolioItem, EventPromo } from "../lib/db";
-import { DEFAULT_PROMO, DEFAULT_LABELS } from "../lib/defaults";
+import { PricesSettings, PricePackage, Booking, PortfolioItem, EventPromo } from "../lib/db";
+import { DEFAULT_PROMO } from "../lib/defaults";
 import {
   LogOut,
   Settings,
@@ -32,13 +32,13 @@ import {
   List,
   Download,
   Share,
+  Star,
   X
 } from "lucide-react";
 import Image from "next/image";
 
 interface AdminDashboardProps {
   initialSettings: PricesSettings;
-  initialLabels?: PackageLabels;
   initialBookings: Booking[];
   initialPortfolio: PortfolioItem[];
   initialPromo?: EventPromo;
@@ -136,7 +136,7 @@ BMW Photographe`;
   return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(text)}`;
 }
 
-export default function AdminDashboard({ initialSettings, initialLabels, initialBookings, initialPortfolio, initialPromo, currentRoute }: AdminDashboardProps) {
+export default function AdminDashboard({ initialSettings, initialBookings, initialPortfolio, initialPromo, currentRoute }: AdminDashboardProps) {
   const pathname = usePathname();
   const activeTab = (currentRoute || pathname) === "/admin/agenda"
     ? "calendar"
@@ -147,7 +147,6 @@ export default function AdminDashboard({ initialSettings, initialLabels, initial
         : "reservations";
 
   const [settings, setSettings] = useState<PricesSettings>(initialSettings);
-  const [labels, setLabels] = useState<PackageLabels>(initialLabels || DEFAULT_LABELS);
   const [bookings, setBookings] = useState<Booking[]>(initialBookings);
   const [portfolio, setPortfolio] = useState<PortfolioItem[]>(initialPortfolio);
   const [promo, setPromo] = useState<EventPromo>(initialPromo || DEFAULT_PROMO);
@@ -289,7 +288,6 @@ export default function AdminDashboard({ initialSettings, initialLabels, initial
       // jamais écraser une saisie en cours sur l'onglet "Tarifs".
       if (activeTabRef.current !== "prices") {
         if (data.settings) setSettings(data.settings);
-        if (data.labels) setLabels(data.labels);
         if (data.promo) setPromo(data.promo);
       }
     } catch (e) { }
@@ -333,13 +331,35 @@ export default function AdminDashboard({ initialSettings, initialLabels, initial
   const handleUpdatePrices = async (e: React.FormEvent) => {
     e.preventDefault();
     startTransition(async () => {
-      const res = await updatePricesSettings(settings, labels);
+      const res = await updatePricesSettings(settings);
       if (res.success) {
         triggerNotification("success", "Tarifs enregistrés et mis à jour !");
       } else {
         triggerNotification("error", res.message || "Erreur de mise à jour");
       }
     });
+  };
+
+  type PriceCategory = "studio" | "exterieur" | "ceremonie";
+
+  const updatePackage = (category: PriceCategory, id: string, patch: Partial<PricePackage>) => {
+    setSettings(prev => ({
+      ...prev,
+      [category]: prev[category].map(p => (p.id === id ? { ...p, ...patch } : p)),
+    }));
+  };
+
+  const addPackage = (category: PriceCategory) => {
+    const newPkg: PricePackage = {
+      id: `${category}_${Date.now().toString(36)}`,
+      label: "Nouvelle formule",
+      price: 0,
+    };
+    setSettings(prev => ({ ...prev, [category]: [...prev[category], newPkg] }));
+  };
+
+  const removePackage = (category: PriceCategory, id: string) => {
+    setSettings(prev => ({ ...prev, [category]: prev[category].filter(p => p.id !== id) }));
   };
 
   const handleSavePromo = async (e: React.FormEvent) => {
@@ -553,6 +573,20 @@ export default function AdminDashboard({ initialSettings, initialLabels, initial
         triggerNotification("success", "Photo supprimée !");
       } else {
         triggerNotification("error", res.message || "Erreur de suppression");
+      }
+    });
+  };
+
+  const handleToggleFeatured = async (item: PortfolioItem) => {
+    const nextFeatured = !item.featured;
+    setPortfolio(prev => prev.map(p => p.id === item.id ? { ...p, featured: nextFeatured } : p));
+    startTransition(async () => {
+      const res = await updatePortfolioItem(item.id, { featured: nextFeatured });
+      if (res.success) {
+        triggerNotification("success", nextFeatured ? "Photo mise en avant dans le Hero !" : "Photo retirée du Hero.");
+      } else {
+        setPortfolio(prev => prev.map(p => p.id === item.id ? { ...p, featured: item.featured } : p));
+        triggerNotification("error", res.message || "Erreur");
       }
     });
   };
@@ -1225,7 +1259,9 @@ export default function AdminDashboard({ initialSettings, initialLabels, initial
                 <h3 className="font-extrabold text-base text-slate-900 flex items-center gap-2">
                   <ImageIcon className="w-5 h-5 text-[--brand] shrink-0" /> Portfolio ({portfolio.length})
                 </h3>
-                <p className="text-[11px] sm:text-xs text-slate-500 font-semibold mt-0.5">Gérez et organisez votre galerie photo.</p>
+                <p className="text-[11px] sm:text-xs text-slate-500 font-semibold mt-0.5">
+                  Gérez et organisez votre galerie photo. Cliquez sur <Star className="w-3 h-3 inline text-[--brand] fill-current" /> pour choisir les photos du diaporama Hero de la page d’accueil (5 max affichées).
+                </p>
               </div>
 
               <button
@@ -1246,6 +1282,11 @@ export default function AdminDashboard({ initialSettings, initialLabels, initial
                       <span className="absolute top-2 left-2 bg-slate-900/90 text-white text-[9px] font-extrabold uppercase px-2.5 py-0.5 rounded-md">
                         {item.category}
                       </span>
+                      {item.featured && (
+                        <span className="absolute top-2 right-2 bg-[--brand] text-white text-[9px] font-extrabold uppercase px-2.5 py-0.5 rounded-md flex items-center gap-1">
+                          <Star className="w-2.5 h-2.5 fill-current" /> Hero
+                        </span>
+                      )}
                     </div>
 
                     <p className="mt-3 text-xs font-extrabold text-slate-900 truncate" title={item.title}>
@@ -1256,6 +1297,13 @@ export default function AdminDashboard({ initialSettings, initialLabels, initial
                   <div className="mt-3 pt-2 border-t border-slate-100 flex items-center justify-between">
                     <span className="text-[10px] font-mono text-slate-400">ID #{item.id}</span>
                     <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => handleToggleFeatured(item)}
+                        className={`p-2 rounded-xl transition-colors ${item.featured ? "text-[--brand] bg-[--brand]/10 hover:bg-[--brand]/20" : "text-slate-400 hover:text-[--brand] hover:bg-[--brand]/10"}`}
+                        title={item.featured ? "Retirer du Hero de la page d'accueil" : "Mettre en avant dans le Hero de la page d'accueil"}
+                      >
+                        <Star className={`w-3.5 h-3.5 ${item.featured ? "fill-current" : ""}`} />
+                      </button>
                       <button
                         onClick={() => openEditPhotoModal(item)}
                         className="p-2 text-amber-700 bg-amber-50 hover:bg-amber-100 rounded-xl transition-colors"
@@ -1288,96 +1336,89 @@ export default function AdminDashboard({ initialSettings, initialLabels, initial
             </div>
 
             <form onSubmit={handleUpdatePrices} className="space-y-8">
-              <div className="space-y-4">
-                <h4 className="text-xs uppercase font-extrabold text-[--brand] tracking-wider border-b border-slate-100 pb-2">
-                  En Studio
-                </h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                  {(["studio_5", "studio_7", "studio_10", "studio_15", "studio_20"] as const).map((key) => (
-                    <div key={key}>
-                      <input
-                        type="text"
-                        value={labels[key]}
-                        onChange={(e) => setLabels(prev => ({ ...prev, [key]: e.target.value }))}
-                        placeholder="Libellé (ex: 5 photos)"
-                        className="w-full mb-1.5 px-0.5 py-0.5 bg-transparent border-0 border-b border-dashed border-slate-300 focus:border-[--brand] text-xs font-extrabold text-slate-600 focus:outline-none transition-colors"
-                      />
-                      <div className="relative">
+              {([
+                { category: "studio" as const, title: "En Studio", color: "text-[--brand]" },
+                { category: "exterieur" as const, title: "En Extérieur", color: "text-blue-600" },
+                { category: "ceremonie" as const, title: "Mariage & Baptême", color: "text-purple-600" },
+              ]).map(({ category, title, color }) => (
+                <div key={category} className="space-y-4">
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                    <h4 className={`text-xs uppercase font-extrabold tracking-wider ${color}`}>
+                      {title}
+                    </h4>
+                    <button
+                      type="button"
+                      onClick={() => addPackage(category)}
+                      className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wider text-slate-500 hover:text-[--brand] transition-colors"
+                    >
+                      <Plus className="w-3.5 h-3.5" /> Ajouter une formule
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                    {settings[category].map((pkg) => (
+                      <div key={pkg.id} className="relative group">
+                        <button
+                          type="button"
+                          onClick={() => removePackage(category, pkg.id)}
+                          className="absolute -top-1.5 -right-1.5 z-10 w-5 h-5 bg-white border border-slate-200 text-slate-400 hover:text-red-600 hover:border-red-200 rounded-full flex items-center justify-center shadow-sm transition-colors"
+                          title="Supprimer cette formule"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
                         <input
-                          type="number"
-                          value={settings[key] === 0 ? "" : (settings[key] ?? "")}
-                          onChange={(e) => {
-                            const val = e.target.value;
-                            setSettings(prev => ({ ...prev, [key]: val === "" ? 0 : parseInt(val, 10) || 0 }));
-                          }}
-                          className="w-full pr-14 pl-4 py-2.5 bg-slate-50 border border-slate-200 focus:border-[--brand] rounded-xl text-xs font-extrabold focus:outline-none transition-colors"
+                          type="text"
+                          value={pkg.label}
+                          onChange={(e) => updatePackage(category, pkg.id, { label: e.target.value })}
+                          placeholder="Libellé (ex: 5 photos)"
+                          className="w-full mb-1.5 px-0.5 py-0.5 bg-transparent border-0 border-b border-dashed border-slate-300 focus:border-[--brand] text-xs font-extrabold text-slate-600 focus:outline-none transition-colors"
                         />
-                        <span className="absolute inset-y-0 right-0 pr-3 flex items-center text-[10px] font-extrabold text-slate-400 uppercase">FCFA</span>
+                        <div className="relative">
+                          <input
+                            type="number"
+                            value={pkg.price === 0 ? "" : pkg.price}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              updatePackage(category, pkg.id, { price: val === "" ? 0 : parseInt(val, 10) || 0 });
+                            }}
+                            className="w-full pr-14 pl-4 py-2.5 bg-slate-50 border border-slate-200 focus:border-[--brand] rounded-xl text-xs font-extrabold focus:outline-none transition-colors"
+                          />
+                          <span className="absolute inset-y-0 right-0 pr-3 flex items-center text-[10px] font-extrabold text-slate-400 uppercase">FCFA</span>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                    {settings[category].length === 0 && (
+                      <p className="text-xs text-slate-400 font-semibold italic col-span-full">Aucune formule dans cette catégorie — ajoutez-en une.</p>
+                    )}
+                  </div>
                 </div>
-              </div>
+              ))}
 
               <div className="space-y-4">
-                <h4 className="text-xs uppercase font-extrabold text-blue-600 tracking-wider border-b border-slate-100 pb-2">
-                  En Extérieur
+                <h4 className="text-xs uppercase font-extrabold text-amber-600 tracking-wider border-b border-slate-100 pb-2">
+                  Option
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                  {(["exterieur_5", "exterieur_10"] as const).map((key) => (
-                    <div key={key}>
+                  <div>
+                    <input
+                      type="text"
+                      value={settings.optionVideoLabel}
+                      onChange={(e) => setSettings(prev => ({ ...prev, optionVideoLabel: e.target.value }))}
+                      placeholder="Libellé (ex: Vidéo cinématique)"
+                      className="w-full mb-1.5 px-0.5 py-0.5 bg-transparent border-0 border-b border-dashed border-slate-300 focus:border-[--brand] text-xs font-extrabold text-slate-600 focus:outline-none transition-colors"
+                    />
+                    <div className="relative">
                       <input
-                        type="text"
-                        value={labels[key]}
-                        onChange={(e) => setLabels(prev => ({ ...prev, [key]: e.target.value }))}
-                        placeholder="Libellé (ex: 5 photos)"
-                        className="w-full mb-1.5 px-0.5 py-0.5 bg-transparent border-0 border-b border-dashed border-slate-300 focus:border-[--brand] text-xs font-extrabold text-slate-600 focus:outline-none transition-colors"
+                        type="number"
+                        value={settings.optionVideoPrice === 0 ? "" : settings.optionVideoPrice}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setSettings(prev => ({ ...prev, optionVideoPrice: val === "" ? 0 : parseInt(val, 10) || 0 }));
+                        }}
+                        className="w-full pr-14 pl-4 py-2.5 bg-slate-50 border border-slate-200 focus:border-[--brand] rounded-xl text-xs font-extrabold focus:outline-none transition-colors"
                       />
-                      <div className="relative">
-                        <input
-                          type="number"
-                          value={settings[key] === 0 ? "" : (settings[key] ?? "")}
-                          onChange={(e) => {
-                            const val = e.target.value;
-                            setSettings(prev => ({ ...prev, [key]: val === "" ? 0 : parseInt(val, 10) || 0 }));
-                          }}
-                          className="w-full pr-14 pl-4 py-2.5 bg-slate-50 border border-slate-200 focus:border-[--brand] rounded-xl text-xs font-extrabold focus:outline-none transition-colors"
-                        />
-                        <span className="absolute inset-y-0 right-0 pr-3 flex items-center text-[10px] font-extrabold text-slate-400 uppercase">FCFA</span>
-                      </div>
+                      <span className="absolute inset-y-0 right-0 pr-3 flex items-center text-[10px] font-extrabold text-slate-400 uppercase">FCFA</span>
                     </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <h4 className="text-xs uppercase font-extrabold text-purple-600 tracking-wider border-b border-slate-100 pb-2">
-                  Mariage &amp; Baptême
-                </h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                  {(["ceremonie_80", "ceremonie_100", "ceremonie_120", "ceremonie_tak_diaka", "option_video"] as const).map((key) => (
-                    <div key={key}>
-                      <input
-                        type="text"
-                        value={labels[key]}
-                        onChange={(e) => setLabels(prev => ({ ...prev, [key]: e.target.value }))}
-                        placeholder="Libellé (ex: 80 photos)"
-                        className="w-full mb-1.5 px-0.5 py-0.5 bg-transparent border-0 border-b border-dashed border-slate-300 focus:border-[--brand] text-xs font-extrabold text-slate-600 focus:outline-none transition-colors"
-                      />
-                      <div className="relative">
-                        <input
-                          type="number"
-                          value={settings[key] === 0 ? "" : (settings[key] ?? "")}
-                          onChange={(e) => {
-                            const val = e.target.value;
-                            setSettings(prev => ({ ...prev, [key]: val === "" ? 0 : parseInt(val, 10) || 0 }));
-                          }}
-                          className="w-full pr-14 pl-4 py-2.5 bg-slate-50 border border-slate-200 focus:border-[--brand] rounded-xl text-xs font-extrabold focus:outline-none transition-colors"
-                        />
-                        <span className="absolute inset-y-0 right-0 pr-3 flex items-center text-[10px] font-extrabold text-slate-400 uppercase">FCFA</span>
-                      </div>
-                    </div>
-                  ))}
+                  </div>
                 </div>
               </div>
 
@@ -1460,23 +1501,21 @@ export default function AdminDashboard({ initialSettings, initialLabels, initial
                   </h4>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {([
-                      "studio_5", "studio_7", "studio_10", "studio_15", "studio_20",
-                      "exterieur_5", "exterieur_10",
-                      "ceremonie_80", "ceremonie_100", "ceremonie_120", "ceremonie_tak_diaka",
-                    ] as const).map((key) => ({ key, label: `${labels[key]} (Normal: ${settings[key].toLocaleString("fr-FR")} FCFA)` })).map(({ key, label }) => (
-                      <div key={key}>
-                        <label className="block text-[11px] font-extrabold text-slate-600 mb-1">{label}</label>
+                    {[...settings.studio, ...settings.exterieur, ...settings.ceremonie].map((pkg) => (
+                      <div key={pkg.id}>
+                        <label className="block text-[11px] font-extrabold text-slate-600 mb-1">
+                          {pkg.label} (Normal: {pkg.price.toLocaleString("fr-FR")} FCFA)
+                        </label>
                         <div className="relative">
                           <input
                             type="number"
-                            value={(promo.promoPrices[key] ?? settings[key]) === 0 ? "" : (promo.promoPrices[key] ?? settings[key] ?? "")}
+                            value={(promo.promoPrices[pkg.id] ?? pkg.price) === 0 ? "" : (promo.promoPrices[pkg.id] ?? pkg.price)}
                             onChange={(e) => {
                               const val = e.target.value;
                               const numVal = val === "" ? 0 : parseInt(val, 10) || 0;
                               setPromo(prev => ({
                                 ...prev,
-                                promoPrices: { ...prev.promoPrices, [key]: numVal }
+                                promoPrices: { ...prev.promoPrices, [pkg.id]: numVal }
                               }));
                             }}
                             className="w-full pr-12 pl-3 py-2 bg-white border border-slate-200 focus:border-[--brand] rounded-xl text-xs font-extrabold focus:outline-none"
@@ -1485,6 +1524,24 @@ export default function AdminDashboard({ initialSettings, initialLabels, initial
                         </div>
                       </div>
                     ))}
+                    <div>
+                      <label className="block text-[11px] font-extrabold text-slate-600 mb-1">
+                        {settings.optionVideoLabel} (Normal: {settings.optionVideoPrice.toLocaleString("fr-FR")} FCFA)
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          value={(promo.promoOptionVideoPrice ?? settings.optionVideoPrice) === 0 ? "" : (promo.promoOptionVideoPrice ?? settings.optionVideoPrice)}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            const numVal = val === "" ? 0 : parseInt(val, 10) || 0;
+                            setPromo(prev => ({ ...prev, promoOptionVideoPrice: numVal }));
+                          }}
+                          className="w-full pr-12 pl-3 py-2 bg-white border border-slate-200 focus:border-[--brand] rounded-xl text-xs font-extrabold focus:outline-none"
+                        />
+                        <span className="absolute inset-y-0 right-0 pr-2.5 flex items-center text-[9px] font-extrabold text-slate-400">FCFA</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
