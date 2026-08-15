@@ -1,9 +1,5 @@
-import fs from "fs/promises";
-import path from "path";
+import { Redis } from "@upstash/redis";
 import { DEFAULT_PROMO } from "./defaults";
-
-// Définition du chemin du fichier JSON de base de données
-const DB_FILE = path.join(process.cwd(), "data", "db.json");
 
 export interface PortfolioItem {
   id: number;
@@ -173,75 +169,39 @@ const defaultDatabase: Database = {
   promo: DEFAULT_PROMO,
 };
 
-// Initialisation automatique des dossiers d'assets
-async function initAssets() {
-  const publicDir = path.join(process.cwd(), "public");
-  const portfolioDir = path.join(publicDir, "portfolio");
-  
-  // S'assurer que le dossier portfolio existe
-  try {
-    await fs.mkdir(portfolioDir, { recursive: true });
-  } catch (err) {
-    console.error("[initAssets] Erreur de création du dossier portfolio:", err);
+const DB_KEY = "bmw-photographe:db";
+
+// Client Redis initialisé de façon paresseuse : un import au niveau module
+// planterait `next build` si les variables d'environnement Upstash ne sont
+// pas encore configurées (ex: avant provisionnement du Marketplace).
+let _redis: Redis | null = null;
+function getRedis(): Redis {
+  if (!_redis) {
+    _redis = new Redis({
+      url: process.env.KV_REST_API_URL!,
+      token: process.env.KV_REST_API_TOKEN!,
+    });
   }
+  return _redis;
 }
 
-declare global {
-  var _bmw_db_cache: Database | undefined;
-}
-
-const TMP_DB_FILE = path.join("/tmp", "bmw_db.json");
-
-// Lire la base de données
+// Lire la base de données depuis Redis (partagée entre toutes les instances
+// serverless — contrairement à un fichier local, qui n'est pas fiable sur
+// Vercel car chaque instance a son propre système de fichiers éphémère).
 export async function getDb(): Promise<Database> {
-  await initAssets();
+  const redis = getRedis();
+  const data = await redis.get<Database>(DB_KEY);
 
-  if (globalThis._bmw_db_cache) {
-    return globalThis._bmw_db_cache;
-  }
+  if (data) return data;
 
-  // 1. Essayer de lire depuis /tmp (pour la persistance Vercel serverless)
-  try {
-    const tmpData = await fs.readFile(TMP_DB_FILE, "utf-8");
-    const parsed = JSON.parse(tmpData);
-    globalThis._bmw_db_cache = parsed;
-    return parsed;
-  } catch {
-    // 2. Sinon lire depuis le fichier initial data/db.json
-    try {
-      const data = await fs.readFile(DB_FILE, "utf-8");
-      const parsed = JSON.parse(data);
-      globalThis._bmw_db_cache = parsed;
-      return parsed;
-    } catch {
-      globalThis._bmw_db_cache = defaultDatabase;
-      return defaultDatabase;
-    }
-  }
+  // Première utilisation : on amorce Redis avec la base par défaut.
+  await redis.set(DB_KEY, defaultDatabase);
+  return defaultDatabase;
 }
 
 // Écrire dans la base de données
 export async function writeDb(db: Database): Promise<boolean> {
-  globalThis._bmw_db_cache = db;
-  const content = JSON.stringify(db, null, 2);
-  let saved = false;
-
-  // 1. Écrire dans /tmp (toujours autorisé sur Vercel serverless)
-  try {
-    await fs.writeFile(TMP_DB_FILE, content, "utf-8");
-    saved = true;
-  } catch (err) {
-    console.error("[WriteDb /tmp Error]", err);
-  }
-
-  // 2. Écrire dans data/db.json (dev local)
-  try {
-    await fs.mkdir(path.dirname(DB_FILE), { recursive: true });
-    await fs.writeFile(DB_FILE, content, "utf-8");
-    saved = true;
-  } catch {
-    // Système de fichier en lecture seule sur Vercel production
-  }
-
-  return saved;
+  const redis = getRedis();
+  await redis.set(DB_KEY, db);
+  return true;
 }
