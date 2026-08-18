@@ -1223,26 +1223,36 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
                             )}
                           </div>
 
-                          {/* Liste des séances du jour */}
-                          <div className="space-y-1 mt-1 overflow-y-auto max-h-[70px]">
-                            {dayBookings.map((b) => (
-                              <div
-                                key={b.id}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  openEditBookingModal(b);
-                                }}
-                                className={`px-1.5 py-1 rounded-lg text-[9px] font-extrabold truncate border ${b.status === "Confirmé"
-                                    ? "bg-emerald-50 text-emerald-800 border-emerald-200"
-                                    : b.status === "En attente"
-                                      ? "bg-amber-50 text-amber-800 border-amber-200"
-                                      : "bg-slate-100 text-slate-600 border-slate-200"
-                                  }`}
-                                title={`${b.name} (${b.time || "15:00"}) — ${b.formula}`}
-                              >
-                                {b.time || "15:00"} {b.name}
-                              </div>
-                            ))}
+                          {/* Grille des créneaux du jour — vert = libre, coloré = pris */}
+                          <div className="grid grid-cols-3 gap-[3px] mt-1">
+                            {TIME_SLOTS.map((t) => {
+                              const slotBooking = dayBookings.find((b) => b.time === t);
+                              return (
+                                <div
+                                  key={t}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (slotBooking) {
+                                      openEditBookingModal(slotBooking);
+                                    } else {
+                                      setBookingForm({ name: "", phone: "", location: "Studio", formula: "Studio — 5 photos", status: "Confirmé", date: dateStr, time: t });
+                                      setIsBookingModalOpen(true);
+                                    }
+                                  }}
+                                  title={slotBooking ? `${t} — ${slotBooking.name} (${slotBooking.status})` : `${t} — libre`}
+                                  className={`h-3.5 sm:h-4 rounded-[3px] border text-[6px] sm:text-[7px] font-extrabold flex items-center justify-center leading-none cursor-pointer ${slotBooking
+                                      ? slotBooking.status === "Confirmé"
+                                        ? "bg-emerald-500 border-emerald-600 text-white"
+                                        : slotBooking.status === "En attente"
+                                          ? "bg-amber-400 border-amber-500 text-white"
+                                          : "bg-slate-300 border-slate-400 text-white"
+                                      : "bg-slate-50 border-slate-200 text-slate-300 hover:border-[--brand] hover:bg-[--brand]/5"
+                                    }`}
+                                >
+                                  {slotBooking ? t.slice(0, 2) : ""}
+                                </div>
+                              );
+                            })}
                           </div>
                         </div>
                       );
@@ -1250,6 +1260,14 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
 
                     return cells;
                   })()}
+                </div>
+
+                {/* Légende de la grille de créneaux */}
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-4 pt-3 border-t border-slate-100 text-[10px] font-bold text-slate-500">
+                  <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-[3px] bg-slate-50 border border-slate-200"></span> Créneau libre</span>
+                  <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-[3px] bg-amber-400 border border-amber-500"></span> En attente</span>
+                  <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-[3px] bg-emerald-500 border border-emerald-600"></span> Confirmé</span>
+                  <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-[3px] bg-slate-300 border border-slate-400"></span> Annulé</span>
                 </div>
               </div>
             )}
