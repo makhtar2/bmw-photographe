@@ -198,6 +198,9 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
   // Filtres réservations
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"Tous" | "En attente" | "Confirmé" | "Annulé">("Tous");
+  // N'affiche que les réservations sans date/heure — utile pour retrouver les
+  // réservations créées avant l'ajout du créneau horaire, à compléter à la main.
+  const [missingDateOnly, setMissingDateOnly] = useState(false);
 
   // Notification Toast
   const [notification, setNotification] = useState<{ type: "success" | "error"; message: string } | null>(null);
@@ -634,12 +637,17 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
       b.formula.toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchStatus = statusFilter === "Tous" || b.status === statusFilter;
-    return matchQuery && matchStatus;
+    const matchDate = !missingDateOnly || !b.date;
+    return matchQuery && matchStatus && matchDate;
   });
 
   const totalBookingsCount = bookings.length;
   const pendingCount = bookings.filter(b => b.status === "En attente").length;
   const confirmedCount = bookings.filter(b => b.status === "Confirmé").length;
+  // Anciennes réservations créées avant l'ajout du choix de date/heure : cette
+  // info n'a jamais été enregistrée et ne peut pas être retrouvée automatiquement,
+  // il faut la compléter à la main (ex: en consultant la conversation WhatsApp).
+  const missingDateCount = bookings.filter(b => !b.date).length;
   const totalRevenue = bookings
     .filter(b => b.status === "Confirmé")
     .reduce((acc, b) => {
@@ -810,6 +818,27 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
                 </div>
               </div>
             </section>
+
+            {missingDateCount > 0 && (
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3 justify-between bg-amber-50 border border-amber-200 p-4 rounded-2xl">
+                <div className="flex items-start gap-2.5">
+                  <Clock className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                  <p className="text-xs font-bold text-amber-800">
+                    {missingDateCount} réservation{missingDateCount > 1 ? "s" : ""} sans date/heure — créée{missingDateCount > 1 ? "s" : ""} avant l&apos;ajout du choix de créneau, cette info n&apos;a jamais été enregistrée. Retrouvez-la via WhatsApp puis complétez-la avec &quot;Modifier&quot;.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setMissingDateOnly(v => !v)}
+                  className={`shrink-0 self-start sm:self-auto px-3.5 py-2 text-[11px] font-extrabold uppercase tracking-wider rounded-xl border transition-all ${missingDateOnly
+                      ? "bg-amber-600 border-amber-600 text-white"
+                      : "bg-white border-amber-300 text-amber-700 hover:bg-amber-100"
+                    }`}
+                >
+                  {missingDateOnly ? "Voir toutes les réservations" : "Voir uniquement celles-ci"}
+                </button>
+              </div>
+            )}
 
             <div className="flex flex-col sm:flex-row gap-3 items-center justify-between bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
               <div className="flex items-center gap-3 w-full sm:w-auto">
