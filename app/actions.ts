@@ -34,13 +34,9 @@ export async function submitBooking(data: BookingInput): Promise<ActionState> {
   const v = result.data;
   const db = await getDb();
 
-  const isSlotTaken = db.bookings.some(
-    (b) => b.date === v.date && b.time === v.time && b.status !== "Annulé"
-  );
-  if (isSlotTaken) {
-    return { success: false, errors: { time: ["Ce créneau est déjà réservé, choisissez-en un autre."] } };
-  }
-
+  // Pas de blocage sur les créneaux déjà pris : les clients ne respectent pas
+  // toujours l'heure choisie dans les faits, donc plusieurs réservations sur
+  // le même créneau restent possibles — à gérer manuellement côté admin.
   const newBooking: Booking = {
     id: Math.random().toString(36).substring(2, 7).toUpperCase(),
     ...v,

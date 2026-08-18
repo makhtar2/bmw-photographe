@@ -48,15 +48,6 @@ export default function BookingForm({ settings, id = "reservation" }: BookingFor
     return () => { cancelled = true; };
   }, [selectedDate]);
 
-  // Si l'horaire déjà sélectionné devient indisponible (créneau pris entre
-  // temps, ou changement de date), on le réinitialise pour éviter un envoi
-  // sur un créneau qui sera de toute façon refusé côté serveur.
-  useEffect(() => {
-    if (selectedTime && bookedSlots.includes(selectedTime)) {
-      setValue("time", "");
-    }
-  }, [bookedSlots, selectedTime, setValue]);
-
   const formulaOption = (pkg: PricePackage) => {
     const text = `${pkg.label} — ${pkg.price.toLocaleString("fr-FR")} FCFA`;
     return { value: text, label: text };
@@ -219,23 +210,24 @@ export default function BookingForm({ settings, id = "reservation" }: BookingFor
                 ) : (
                   <div className="grid grid-cols-3 gap-2">
                     {TIME_SLOTS.map((t) => {
-                      const isTaken = bookedSlots.includes(t);
+                      const isBusy = bookedSlots.includes(t);
                       const isSelected = selectedTime === t;
                       return (
                         <button
                           key={t}
                           type="button"
-                          disabled={isTaken}
                           onClick={() => setValue("time", t, { shouldValidate: true })}
-                          className={`py-2.5 rounded-xl text-[13px] font-extrabold border transition-all ${
-                            isTaken
-                              ? "bg-red-50 border-red-100 text-red-300 line-through cursor-not-allowed"
-                              : isSelected
-                                ? "bg-slate-900 border-slate-900 text-white shadow-sm"
-                                : "bg-slate-50 border-slate-200 text-slate-600 hover:border-slate-400"
+                          title={isBusy ? "Déjà demandé par un autre client, mais vous pouvez quand même le choisir" : undefined}
+                          className={`relative py-2.5 rounded-xl text-[13px] font-extrabold border transition-all ${
+                            isSelected
+                              ? "bg-slate-900 border-slate-900 text-white shadow-sm"
+                              : "bg-slate-50 border-slate-200 text-slate-600 hover:border-slate-400"
                           }`}
                         >
                           {t}
+                          {isBusy && !isSelected && (
+                            <span className="absolute top-1 right-1.5 w-1.5 h-1.5 rounded-full bg-amber-400" />
+                          )}
                         </button>
                       );
                     })}

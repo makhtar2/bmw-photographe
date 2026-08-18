@@ -1939,24 +1939,24 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
                     <label className="block text-xs font-extrabold text-[--brand] mb-1">Heure de Séance</label>
                     <div className="grid grid-cols-3 gap-1.5">
                       {TIME_SLOTS.map((t) => {
-                        const isTaken = bookedSlotsForForm.includes(t);
+                        const isBusy = bookedSlotsForForm.includes(t);
                         const isSelected = bookingForm.time === t;
                         return (
                           <button
                             key={t}
                             type="button"
-                            disabled={isTaken}
                             onClick={() => setBookingForm({ ...bookingForm, time: t })}
-                            title={isTaken ? "Créneau déjà réservé" : undefined}
-                            className={`py-2 rounded-lg text-[11px] font-extrabold border transition-all ${
-                              isTaken
-                                ? "bg-red-50 border-red-100 text-red-300 line-through cursor-not-allowed"
-                                : isSelected
-                                  ? "bg-[--brand] border-[--brand] text-white shadow-sm"
-                                  : "bg-white border-slate-200 text-slate-600 hover:border-[--brand]"
+                            title={isBusy ? "Un autre client est déjà sur ce créneau — vous pouvez quand même le choisir" : undefined}
+                            className={`relative py-2 rounded-lg text-[11px] font-extrabold border transition-all ${
+                              isSelected
+                                ? "bg-[--brand] border-[--brand] text-white shadow-sm"
+                                : "bg-white border-slate-200 text-slate-600 hover:border-[--brand]"
                             }`}
                           >
                             {t}
+                            {isBusy && !isSelected && (
+                              <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-amber-400" />
+                            )}
                           </button>
                         );
                       })}
