@@ -13,6 +13,17 @@ export type ActionState = {
 };
 
 // ── RÉSERVATION CLIENT ──
+
+// Créneaux déjà réservés (hors annulations) pour une date donnée — utilisé
+// par le formulaire client pour ne pas proposer un horaire déjà pris.
+export async function getBookedSlots(date: string): Promise<string[]> {
+  if (!date) return [];
+  const db = await getDb();
+  return db.bookings
+    .filter((b) => b.date === date && b.status !== "Annulé" && b.time)
+    .map((b) => b.time!);
+}
+
 export async function submitBooking(data: BookingInput): Promise<ActionState> {
   const result = bookingSchema.safeParse(data);
 
@@ -22,6 +33,13 @@ export async function submitBooking(data: BookingInput): Promise<ActionState> {
 
   const v = result.data;
   const db = await getDb();
+
+  const isSlotTaken = db.bookings.some(
+    (b) => b.date === v.date && b.time === v.time && b.status !== "Annulé"
+  );
+  if (isSlotTaken) {
+    return { success: false, errors: { time: ["Ce créneau est déjà réservé, choisissez-en un autre."] } };
+  }
 
   const newBooking: Booking = {
     id: Math.random().toString(36).substring(2, 7).toUpperCase(),
@@ -34,9 +52,12 @@ export async function submitBooking(data: BookingInput): Promise<ActionState> {
   await writeDb(db);
 
   const whatsappPhone = process.env.WHATSAPP_PHONE || "221762588808";
+  const dateTxt = v.date
+    ? ` le ${new Date(v.date).toLocaleDateString("fr-FR")}${v.time ? ` à ${v.time}` : ""}`
+    : "";
   const message = `Bonjour, c'est ${v.name}.
 
-Je souhaite réserver la formule : ${v.formula} (${v.location}).
+Je souhaite réserver la formule : ${v.formula} (${v.location})${dateTxt}.
 Mon téléphone : ${v.phone}.
 
 Ci-joint le reçu de mon paiement d'acompte.`;

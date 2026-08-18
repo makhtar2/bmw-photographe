@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { logoutAdmin, updatePricesSettings, updateBookingStatus, deleteBooking, addBookingAdmin, updateBookingFull, addPortfolioItem, deletePortfolioItem, updatePortfolioItem, updatePromoOffer } from "../app/actions";
 import { PricesSettings, PricePackage, Booking, PortfolioItem, EventPromo } from "../lib/db";
+import { TIME_SLOTS } from "../lib/schema";
 import { DEFAULT_PROMO } from "../lib/defaults";
 import {
   LogOut,
@@ -387,6 +388,34 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
     });
   };
 
+  // Tarif promo par formule : un champ laissé vide retire la clé de promoPrices
+  // (pas de promo sur cet article) plutôt que d'y stocker le prix normal ou 0.
+  const setPromoPackagePrice = (id: string, raw: string) => {
+    setPromo(prev => {
+      if (raw === "") {
+        const rest = { ...prev.promoPrices };
+        delete rest[id];
+        return { ...prev, promoPrices: rest };
+      }
+      const numVal = parseInt(raw, 10);
+      return { ...prev, promoPrices: { ...prev.promoPrices, [id]: Number.isNaN(numVal) ? 0 : numVal } };
+    });
+  };
+
+  const setPromoVideoPrice = (raw: string) => {
+    setPromo(prev => ({ ...prev, promoOptionVideoPrice: raw === "" ? undefined : (parseInt(raw, 10) || 0) }));
+  };
+
+  const clearAllPromoPrices = () => {
+    setPromo(prev => ({ ...prev, promoPrices: {}, promoOptionVideoPrice: undefined }));
+  };
+
+  const PROMO_CATEGORIES: { category: PriceCategory; title: string; color: string }[] = [
+    { category: "studio", title: "En Studio", color: "text-[--brand]" },
+    { category: "exterieur", title: "En Extérieur", color: "text-blue-600" },
+    { category: "ceremonie", title: "Mariage & Baptême", color: "text-purple-600" },
+  ];
+
   const handleStatusChange = async (id: string, newStatus: Booking["status"]) => {
     startTransition(async () => {
       const res = await updateBookingStatus(id, newStatus);
@@ -439,6 +468,12 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
     });
     setIsBookingModalOpen(true);
   };
+
+  // Créneaux déjà pris à la date sélectionnée (hors annulations et hors la
+  // réservation en cours d'édition, pour ne pas se griser soi-même).
+  const bookedSlotsForForm = bookings
+    .filter((b) => b.date === bookingForm.date && b.status !== "Annulé" && b.time && b.id !== editingBookingId)
+    .map((b) => b.time!);
 
   const handleSaveBooking = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1433,37 +1468,38 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
 
             {/* ════════ GESTIONNAIRE D'ÉVÉNEMENTS & PROMOS DYNAMIQUES ════════ */}
             <div className="mt-12 pt-8 border-t border-slate-200 space-y-6">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
                   <span className="text-[11px] font-extrabold uppercase tracking-widest text-[--brand]">Événements &amp; Saisons</span>
                   <h3 className="text-xl font-extrabold text-slate-900 flex items-center gap-2 mt-0.5">
                     <Tag className="w-5 h-5 text-[--brand]" /> Promo Événementielle (ex: Gamou, Tabaski, Korité...)
                   </h3>
-                  <p className="text-xs text-slate-500 font-semibold">Configurez vos offres de saison (Gamou, Tabaski, Magal) et ajustez vos tarifs directement pour l’ensemble du studio.</p>
+                  <p className="text-xs text-slate-500 font-semibold">Configurez vos offres de saison et ajustez vos tarifs directement pour l’ensemble du studio.</p>
                 </div>
 
-                <label className="relative inline-flex items-center cursor-pointer">
+                <label className="relative inline-flex items-center gap-2 cursor-pointer bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 shrink-0 self-start sm:self-auto">
+                  <span className={`w-2 h-2 rounded-full shrink-0 ${promo.enabled ? "bg-emerald-500" : "bg-slate-300"}`} />
+                  <span className="text-xs font-extrabold text-slate-700">
+                    {promo.enabled ? "Offre active" : "Offre inactive"}
+                  </span>
                   <input
                     type="checkbox"
                     checked={promo.enabled}
                     onChange={(e) => handleTogglePromo(e.target.checked)}
                     className="sr-only peer"
                   />
-                  <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[--brand]"></div>
-                  <span className="ml-2 text-xs font-extrabold text-slate-700">
-                    {promo.enabled ? "Active" : "Inactive"}
-                  </span>
+                  <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[--brand]"></div>
                 </label>
               </div>
 
               <form onSubmit={handleSavePromo} className="space-y-6 bg-slate-50 p-5 rounded-2xl border border-slate-200">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-extrabold text-slate-600 mb-1.5">Nom de l’Événement *</label>
+                    <label className="block text-xs font-extrabold text-slate-600 mb-1.5">Nom de l’événement *</label>
                     <input
                       type="text"
                       required
-                      placeholder="Ex: Promo Spéciale Gamou"
+                      placeholder="Ex: Spécial Gamou"
                       value={promo.eventName}
                       onChange={(e) => setPromo({ ...promo, eventName: e.target.value })}
                       className="w-full px-4 py-2.5 bg-white border border-slate-200 focus:border-[--brand] rounded-xl text-xs font-bold focus:outline-none"
@@ -1471,76 +1507,131 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
                   </div>
 
                   <div>
-                    <label className="block text-xs font-extrabold text-slate-600 mb-1.5">Badge d’Affichage *</label>
+                    <label className="block text-xs font-extrabold text-slate-600 mb-1.5">Badge d’affichage *</label>
                     <input
                       type="text"
                       required
-                      placeholder="Ex: PROMO GAMOU, PROMO TABASKI"
+                      placeholder="Ex: PROMO GAMOU"
                       value={promo.badgeText}
                       onChange={(e) => setPromo({ ...promo, badgeText: e.target.value })}
-                      className="w-full px-4 py-2.5 bg-white border border-slate-200 focus:border-[--brand] rounded-xl text-xs font-extrabold uppercase focus:outline-none"
+                      className="w-full px-4 py-2.5 bg-white border border-slate-200 focus:border-[--brand] rounded-xl text-xs font-extrabold uppercase focus:outline-none placeholder:normal-case"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-extrabold text-slate-600 mb-1.5">Sous-titre / Message Bannière</label>
+                  <label className="block text-xs font-extrabold text-slate-600 mb-1.5">Sous-titre / message bannière</label>
                   <input
                     type="text"
                     value={promo.subtitle}
                     onChange={(e) => setPromo({ ...promo, subtitle: e.target.value })}
                     className="w-full px-4 py-2.5 bg-white border border-slate-200 focus:border-[--brand] rounded-xl text-xs font-bold focus:outline-none"
-                    placeholder="Message d'accroche pour les clients..."
+                    placeholder="Ex: Profitez de réductions exclusives sur vos séances photo !"
                   />
                 </div>
 
-                {/* Saisie des tarifs promo pour chaque formule */}
-                <div className="space-y-4 pt-4 border-t border-slate-200">
-                  <h4 className="text-xs uppercase font-extrabold text-[--brand] tracking-wider">
-                    Tarifs réduits pendant l’événement (en FCFA)
-                  </h4>
+                {/* Aperçu en direct de la bannière affichée sur le site */}
+                <div>
+                  <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1.5">Aperçu de la bannière</p>
+                  {promo.eventName || promo.badgeText || promo.subtitle ? (
+                    <div className="bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500 text-slate-950 rounded-xl px-4 py-2.5 overflow-hidden">
+                      <p className="font-extrabold text-[11px] uppercase tracking-widest truncate">
+                        ✨ {promo.badgeText && <strong>[{promo.badgeText}]</strong>} {promo.eventName} {promo.subtitle && `— ${promo.subtitle}`} ✨
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="rounded-xl px-4 py-2.5 border border-dashed border-slate-300 text-[11px] font-semibold text-slate-400">
+                      Renseignez le nom de l’événement pour voir l’aperçu de la bannière ici.
+                    </div>
+                  )}
+                </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {[...settings.studio, ...settings.exterieur, ...settings.ceremonie].map((pkg) => (
-                      <div key={pkg.id}>
-                        <label className="block text-[11px] font-extrabold text-slate-600 mb-1">
-                          {pkg.label} (Normal: {pkg.price.toLocaleString("fr-FR")} FCFA)
-                        </label>
-                        <div className="relative">
-                          <input
-                            type="number"
-                            value={(promo.promoPrices[pkg.id] ?? pkg.price) === 0 ? "" : (promo.promoPrices[pkg.id] ?? pkg.price)}
-                            onChange={(e) => {
-                              const val = e.target.value;
-                              const numVal = val === "" ? 0 : parseInt(val, 10) || 0;
-                              setPromo(prev => ({
-                                ...prev,
-                                promoPrices: { ...prev.promoPrices, [pkg.id]: numVal }
-                              }));
-                            }}
-                            className="w-full pr-12 pl-3 py-2 bg-white border border-slate-200 focus:border-[--brand] rounded-xl text-xs font-extrabold focus:outline-none"
-                          />
-                          <span className="absolute inset-y-0 right-0 pr-2.5 flex items-center text-[9px] font-extrabold text-slate-400">FCFA</span>
-                        </div>
-                      </div>
-                    ))}
+                {/* Saisie des tarifs promo pour chaque formule */}
+                <div className="space-y-5 pt-4 border-t border-slate-200">
+                  <div className="flex items-center justify-between gap-3">
                     <div>
-                      <label className="block text-[11px] font-extrabold text-slate-600 mb-1">
-                        {settings.optionVideoLabel} (Normal: {settings.optionVideoPrice.toLocaleString("fr-FR")} FCFA)
-                      </label>
-                      <div className="relative">
-                        <input
-                          type="number"
-                          value={(promo.promoOptionVideoPrice ?? settings.optionVideoPrice) === 0 ? "" : (promo.promoOptionVideoPrice ?? settings.optionVideoPrice)}
-                          onChange={(e) => {
-                            const val = e.target.value;
-                            const numVal = val === "" ? 0 : parseInt(val, 10) || 0;
-                            setPromo(prev => ({ ...prev, promoOptionVideoPrice: numVal }));
-                          }}
-                          className="w-full pr-12 pl-3 py-2 bg-white border border-slate-200 focus:border-[--brand] rounded-xl text-xs font-extrabold focus:outline-none"
-                        />
-                        <span className="absolute inset-y-0 right-0 pr-2.5 flex items-center text-[9px] font-extrabold text-slate-400">FCFA</span>
+                      <h4 className="text-xs uppercase font-extrabold text-[--brand] tracking-wider">
+                        Tarifs réduits pendant l’événement
+                      </h4>
+                      <p className="text-[11px] text-slate-400 font-semibold mt-0.5">
+                        Laissez un champ vide pour garder le tarif normal sur cette formule.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={clearAllPromoPrices}
+                      className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wider text-slate-400 hover:text-red-600 transition-colors shrink-0"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" /> Effacer tous les tarifs promo
+                    </button>
+                  </div>
+
+                  {PROMO_CATEGORIES.map(({ category, title, color }) => (
+                    <div key={category} className="space-y-2.5">
+                      <h5 className={`text-[10px] uppercase font-extrabold tracking-wider ${color}`}>{title}</h5>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                        {settings[category].map((pkg) => {
+                          const promoVal = promo.promoPrices[pkg.id];
+                          const hasDiscount = promoVal !== undefined && promoVal > 0 && promoVal < pkg.price;
+                          const pct = hasDiscount ? Math.round((1 - promoVal / pkg.price) * 100) : 0;
+                          return (
+                            <div key={pkg.id} className={`p-3 rounded-xl border transition-colors ${hasDiscount ? "bg-[--brand]/5 border-[--brand]/30" : "bg-white border-slate-200"}`}>
+                              <div className="flex items-center justify-between gap-2 mb-1">
+                                <label className="text-[11px] font-extrabold text-slate-600 truncate">{pkg.label}</label>
+                                {hasDiscount && (
+                                  <span className="shrink-0 text-[9px] font-extrabold text-white bg-[--brand] px-1.5 py-0.5 rounded-full">-{pct}%</span>
+                                )}
+                              </div>
+                              <p className="text-[10px] font-semibold text-slate-400 mb-1.5">Prix normal : {pkg.price.toLocaleString("fr-FR")} FCFA</p>
+                              <div className="relative">
+                                <input
+                                  type="number"
+                                  value={promoVal ?? ""}
+                                  onChange={(e) => setPromoPackagePrice(pkg.id, e.target.value)}
+                                  placeholder={`${pkg.price.toLocaleString("fr-FR")} FCFA`}
+                                  className="w-full pr-12 pl-3 py-2 bg-white border border-slate-200 focus:border-[--brand] rounded-xl text-xs font-extrabold focus:outline-none"
+                                />
+                                <span className="absolute inset-y-0 right-0 pr-2.5 flex items-center text-[9px] font-extrabold text-slate-400">FCFA</span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                        {settings[category].length === 0 && (
+                          <p className="text-xs text-slate-400 font-semibold italic col-span-full">Aucune formule dans cette catégorie.</p>
+                        )}
                       </div>
+                    </div>
+                  ))}
+
+                  <div className="space-y-2.5">
+                    <h5 className="text-[10px] uppercase font-extrabold tracking-wider text-amber-600">Option</h5>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                      {(() => {
+                        const promoVideoVal = promo.promoOptionVideoPrice;
+                        const hasDiscount = promoVideoVal !== undefined && promoVideoVal > 0 && promoVideoVal < settings.optionVideoPrice;
+                        const pct = hasDiscount ? Math.round((1 - promoVideoVal / settings.optionVideoPrice) * 100) : 0;
+                        return (
+                          <div className={`p-3 rounded-xl border transition-colors ${hasDiscount ? "bg-[--brand]/5 border-[--brand]/30" : "bg-white border-slate-200"}`}>
+                            <div className="flex items-center justify-between gap-2 mb-1">
+                              <label className="text-[11px] font-extrabold text-slate-600 truncate">{settings.optionVideoLabel}</label>
+                              {hasDiscount && (
+                                <span className="shrink-0 text-[9px] font-extrabold text-white bg-[--brand] px-1.5 py-0.5 rounded-full">-{pct}%</span>
+                              )}
+                            </div>
+                            <p className="text-[10px] font-semibold text-slate-400 mb-1.5">Prix normal : {settings.optionVideoPrice.toLocaleString("fr-FR")} FCFA</p>
+                            <div className="relative">
+                              <input
+                                type="number"
+                                value={promoVideoVal ?? ""}
+                                onChange={(e) => setPromoVideoPrice(e.target.value)}
+                                placeholder={`${settings.optionVideoPrice.toLocaleString("fr-FR")} FCFA`}
+                                className="w-full pr-12 pl-3 py-2 bg-white border border-slate-200 focus:border-[--brand] rounded-xl text-xs font-extrabold focus:outline-none"
+                              />
+                              <span className="absolute inset-y-0 right-0 pr-2.5 flex items-center text-[9px] font-extrabold text-slate-400">FCFA</span>
+                            </div>
+                          </div>
+                        );
+                      })()}
                     </div>
                   </div>
                 </div>
@@ -1551,7 +1642,7 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
                   className="w-full py-3.5 px-4 bg-[--brand] text-white hover:bg-slate-900 transition-all rounded-xl text-xs uppercase tracking-wider font-extrabold flex items-center justify-center gap-2 shadow-md disabled:opacity-50 min-w-0"
                 >
                   <Tag className="w-4 h-4 shrink-0" />
-                  <span className="truncate">Enregistrer l’Offre Promo</span>
+                  <span className="truncate">Enregistrer l’offre promo</span>
                 </button>
               </form>
 
@@ -1582,14 +1673,37 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
                   <input type="tel" required value={bookingForm.phone} onChange={e => setBookingForm({ ...bookingForm, phone: e.target.value })} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 focus:border-[--brand] rounded-xl text-xs font-bold focus:outline-none" />
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 bg-[--brand]/5 p-3 rounded-2xl border border-[--brand]/20">
+                <div className="space-y-3 bg-[--brand]/5 p-3 rounded-2xl border border-[--brand]/20">
                   <div>
                     <label className="block text-xs font-extrabold text-[--brand] mb-1">Date de Séance</label>
                     <input type="date" value={bookingForm.date || ""} onChange={e => setBookingForm({ ...bookingForm, date: e.target.value })} className="w-full px-3 py-2 bg-white border border-slate-200 focus:border-[--brand] rounded-xl text-xs font-extrabold focus:outline-none" />
                   </div>
                   <div>
                     <label className="block text-xs font-extrabold text-[--brand] mb-1">Heure de Séance</label>
-                    <input type="time" value={bookingForm.time || "15:00"} onChange={e => setBookingForm({ ...bookingForm, time: e.target.value })} className="w-full px-3 py-2 bg-white border border-slate-200 focus:border-[--brand] rounded-xl text-xs font-extrabold focus:outline-none" />
+                    <div className="grid grid-cols-3 gap-1.5">
+                      {TIME_SLOTS.map((t) => {
+                        const isTaken = bookedSlotsForForm.includes(t);
+                        const isSelected = bookingForm.time === t;
+                        return (
+                          <button
+                            key={t}
+                            type="button"
+                            disabled={isTaken}
+                            onClick={() => setBookingForm({ ...bookingForm, time: t })}
+                            title={isTaken ? "Créneau déjà réservé" : undefined}
+                            className={`py-2 rounded-lg text-[11px] font-extrabold border transition-all ${
+                              isTaken
+                                ? "bg-red-50 border-red-100 text-red-300 line-through cursor-not-allowed"
+                                : isSelected
+                                  ? "bg-[--brand] border-[--brand] text-white shadow-sm"
+                                  : "bg-white border-slate-200 text-slate-600 hover:border-[--brand]"
+                            }`}
+                          >
+                            {t}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
 

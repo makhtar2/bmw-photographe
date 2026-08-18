@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { bookingSchema, BookingInput } from "../lib/schema";
-import { submitBooking } from "../app/actions";
+import { bookingSchema, BookingInput, TIME_SLOTS } from "../lib/schema";
+import { submitBooking, getBookedSlots } from "../app/actions";
 import MaterialIcon from "./MaterialIcon";
 import { PricesSettings, PricePackage } from "../lib/db";
 
@@ -17,11 +17,13 @@ export default function BookingForm({ settings, id = "reservation" }: BookingFor
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
+  const [bookedSlots, setBookedSlots] = useState<string[]>([]);
 
   const {
     register,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors },
   } = useForm<BookingInput>({
     resolver: zodResolver(bookingSchema),
@@ -29,6 +31,31 @@ export default function BookingForm({ settings, id = "reservation" }: BookingFor
   });
 
   const loc = watch("location");
+  const selectedDate = watch("date");
+  const selectedTime = watch("time");
+
+  // Recharge les créneaux déjà pris à chaque changement de date, pour ne pas
+  // proposer un horaire déjà réservé par un autre client.
+  useEffect(() => {
+    if (!selectedDate) {
+      setBookedSlots([]);
+      return;
+    }
+    let cancelled = false;
+    getBookedSlots(selectedDate).then((slots) => {
+      if (!cancelled) setBookedSlots(slots);
+    });
+    return () => { cancelled = true; };
+  }, [selectedDate]);
+
+  // Si l'horaire déjà sélectionné devient indisponible (créneau pris entre
+  // temps, ou changement de date), on le réinitialise pour éviter un envoi
+  // sur un créneau qui sera de toute façon refusé côté serveur.
+  useEffect(() => {
+    if (selectedTime && bookedSlots.includes(selectedTime)) {
+      setValue("time", "");
+    }
+  }, [bookedSlots, selectedTime, setValue]);
 
   const formulaOption = (pkg: PricePackage) => {
     const text = `${pkg.label} — ${pkg.price.toLocaleString("fr-FR")} FCFA`;
@@ -168,6 +195,55 @@ export default function BookingForm({ settings, id = "reservation" }: BookingFor
                 {errors.formula && <p className="text-red-500 text-[11px] mt-1.5 pl-2 font-bold">{errors.formula.message}</p>}
               </div>
 
+              {/* Date souhaitée */}
+              <div className="relative">
+                <label className="block text-[11px] text-slate-500 font-extrabold uppercase tracking-wider mb-2 pl-1">Date souhaitée</label>
+                <div className="relative">
+                  <MaterialIcon name="calendar_month" className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5 pointer-events-none" />
+                  <input
+                    type="date"
+                    min={new Date().toISOString().slice(0, 10)}
+                    {...register("date")}
+                    className={inputStyle(!!errors.date)}
+                  />
+                </div>
+                {errors.date && <p className="text-red-500 text-[11px] mt-1.5 pl-2 font-bold">{errors.date.message}</p>}
+              </div>
+
+              {/* Heure souhaitée — créneaux cliquables */}
+              <div>
+                <label className="block text-[11px] text-slate-500 font-extrabold uppercase tracking-wider mb-2 pl-1">Heure souhaitée</label>
+                <input type="hidden" {...register("time")} />
+                {!selectedDate ? (
+                  <p className="text-[12px] text-slate-400 font-bold px-1 py-2">Sélectionnez d&apos;abord une date.</p>
+                ) : (
+                  <div className="grid grid-cols-3 gap-2">
+                    {TIME_SLOTS.map((t) => {
+                      const isTaken = bookedSlots.includes(t);
+                      const isSelected = selectedTime === t;
+                      return (
+                        <button
+                          key={t}
+                          type="button"
+                          disabled={isTaken}
+                          onClick={() => setValue("time", t, { shouldValidate: true })}
+                          className={`py-2.5 rounded-xl text-[13px] font-extrabold border transition-all ${
+                            isTaken
+                              ? "bg-red-50 border-red-100 text-red-300 line-through cursor-not-allowed"
+                              : isSelected
+                                ? "bg-slate-900 border-slate-900 text-white shadow-sm"
+                                : "bg-slate-50 border-slate-200 text-slate-600 hover:border-slate-400"
+                          }`}
+                        >
+                          {t}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+                {errors.time && <p className="text-red-500 text-[11px] mt-1.5 pl-2 font-bold">{errors.time.message}</p>}
+              </div>
+
               {/* Submit Button */}
               <button
                 type="submit"
@@ -179,7 +255,7 @@ export default function BookingForm({ settings, id = "reservation" }: BookingFor
                     <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
                       <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-1.14 4.162 4.175-1.095z"/>
                     </svg>
-                    Confirmer sur WhatsApp
+                    Confirmer
                   </>
                 )}
               </button>
