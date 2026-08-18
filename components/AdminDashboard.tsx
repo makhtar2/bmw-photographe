@@ -75,52 +75,6 @@ function playNotificationBeep() {
   } catch (e) { }
 }
 
-function addToCalendar(b: Booking) {
-  const startDateStr = b.date || new Date().toISOString().slice(0, 10);
-  const startTimeStr = b.time || "15:00";
-  const cleanDate = startDateStr.replace(/-/g, "");
-  const cleanTime = startTimeStr.replace(/:/g, "") + "00";
-
-  const endHour = (parseInt(startTimeStr.split(":")[0]) + 1).toString().padStart(2, "0");
-  const cleanEndTime = `${endHour}3000`;
-
-  const icsLines = [
-    "BEGIN:VCALENDAR",
-    "VERSION:2.0",
-    "PRODID:-//BMW Photographe Studio//iPhone Calendar//FR",
-    "CALSCALE:GREGORIAN",
-    "METHOD:PUBLISH",
-    "BEGIN:VEVENT",
-    `SUMMARY:Séance Photo - ${b.name}`,
-    `DESCRIPTION:Client: ${b.name}\\nTéléphone: ${b.phone}\\nFormule: ${b.formula}\\nLieu: ${b.location}\\nStatut: ${b.status}`,
-    `LOCATION:${b.location === "Studio" ? "BMW Photographe Studio Thiès" : b.location}`,
-    `DTSTART:${cleanDate}T${cleanTime}`,
-    `DTEND:${cleanDate}T${cleanEndTime}`,
-    "BEGIN:VALARM",
-    "TRIGGER:-PT2H",
-    "ACTION:DISPLAY",
-    "DESCRIPTION:Rappel: Séance photo dans 2h !",
-    "END:VALARM",
-    "BEGIN:VALARM",
-    "TRIGGER:-P1D",
-    "ACTION:DISPLAY",
-    "DESCRIPTION:Rappel: Séance photo demain !",
-    "END:VALARM",
-    "END:VEVENT",
-    "END:VCALENDAR"
-  ].join("\r\n");
-
-  const blob = new Blob([icsLines], { type: "text/calendar;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = `seance-${b.name.replace(/\s+/g, "_")}.ics`;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-}
-
 function getWhatsAppReminderUrl(b: Booking) {
   const cleanPhone = b.phone.replace(/\s+/g, "");
   const dateTxt = b.date ? `prévue le ${new Date(b.date).toLocaleDateString("fr-FR")} à ${b.time || "15:00"}` : "prévue très prochainement";
@@ -174,40 +128,6 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
   const [promo, setPromo] = useState<EventPromo>(initialPromo || DEFAULT_PROMO);
 
   const [isPending, startTransition] = useTransition();
-
-  // PWA Installation State
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
-  const [isStandalone, setIsStandalone] = useState<boolean>(false);
-  const [showInstallModal, setShowInstallModal] = useState<boolean>(false);
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const isStandaloneApp = window.matchMedia("(display-mode: standalone)").matches || (navigator as any).standalone === true;
-      setIsStandalone(isStandaloneApp);
-
-      const handleBeforeInstallPrompt = (e: any) => {
-        e.preventDefault();
-        setDeferredPrompt(e);
-      };
-
-      window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
-      return () => window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
-    }
-  }, []);
-
-  const handleInstallPwa = async () => {
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      if (outcome === "accepted") {
-        setDeferredPrompt(null);
-        setIsStandalone(true);
-        triggerNotification("success", "Application Admin installée sur votre téléphone !");
-      }
-    } else {
-      setShowInstallModal(true);
-    }
-  };
 
   // Notifications navigateur
   const [pushEnabled, setPushEnabled] = useState(false);
@@ -1290,7 +1210,7 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
                                       : "bg-slate-100 border-slate-400 text-slate-500"
                                   }`}
                               >
-                                {b.time && <span className="hidden sm:inline">{b.time} </span>}{b.name}
+                                {b.time && <span>{b.time} </span>}{b.name}
                               </div>
                             ))}
                             {hiddenCount > 0 && (
@@ -1322,41 +1242,46 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
                 <div className="bg-white border border-slate-200 rounded-3xl p-4 sm:p-6 shadow-sm">
                   <div className="divide-y divide-slate-100">
                     {TIME_SLOTS.map((t) => {
-                      const slotBooking = dayBookings.find((b) => b.time === t);
+                      // Plusieurs réservations peuvent partager un même créneau (le blocage a
+                      // été retiré) — on les affiche toutes, pas seulement la première.
+                      const slotBookings = dayBookings.filter((b) => b.time === t);
                       return (
                         <div key={t} className="flex items-stretch gap-3 py-1.5">
                           <div className="w-12 sm:w-14 shrink-0 text-xs font-extrabold text-slate-400 pt-3">{t}</div>
-                          <div
-                            onClick={() => {
-                              if (slotBooking) {
-                                openEditBookingModal(slotBooking);
-                              } else {
+                          <div className="flex-1 space-y-1.5">
+                            {slotBookings.map((slotBooking) => (
+                              <div
+                                key={slotBooking.id}
+                                onClick={() => openEditBookingModal(slotBooking)}
+                                className={`rounded-xl p-3 cursor-pointer border transition-all ${slotBooking.status === "Confirmé"
+                                    ? "bg-emerald-50 border-emerald-200 hover:border-emerald-400"
+                                    : slotBooking.status === "En attente"
+                                      ? "bg-amber-50 border-amber-200 hover:border-amber-400"
+                                      : "bg-slate-100 border-slate-200 hover:border-slate-400"
+                                  }`}
+                              >
+                                <div className="flex items-center justify-between gap-2">
+                                  <div className="min-w-0">
+                                    <p className="font-extrabold text-sm text-slate-900 truncate">{slotBooking.name}</p>
+                                    <p className="text-[11px] font-semibold text-slate-500 truncate">{slotBooking.formula} — {slotBooking.location}</p>
+                                  </div>
+                                  <span className={`shrink-0 text-[9px] uppercase font-extrabold px-2 py-0.5 rounded-full ${slotBooking.status === "Confirmé" ? "bg-emerald-600 text-white" : slotBooking.status === "En attente" ? "bg-amber-500 text-white" : "bg-slate-400 text-white"}`}>
+                                    {slotBooking.status}
+                                  </span>
+                                </div>
+                              </div>
+                            ))}
+                            <div
+                              onClick={() => {
                                 setBookingForm({ name: "", phone: "", location: "Studio", formula: "Studio — 5 photos", status: "Confirmé", date: dateStr, time: t });
                                 setIsBookingModalOpen(true);
-                              }
-                            }}
-                            className={`flex-1 rounded-xl p-3 cursor-pointer border transition-all ${slotBooking
-                                ? slotBooking.status === "Confirmé"
-                                  ? "bg-emerald-50 border-emerald-200 hover:border-emerald-400"
-                                  : slotBooking.status === "En attente"
-                                    ? "bg-amber-50 border-amber-200 hover:border-amber-400"
-                                    : "bg-slate-100 border-slate-200 hover:border-slate-400"
-                                : "border-dashed border-slate-200 hover:border-[--brand] hover:bg-[--brand]/5"
-                              }`}
-                          >
-                            {slotBooking ? (
-                              <div className="flex items-center justify-between gap-2">
-                                <div className="min-w-0">
-                                  <p className="font-extrabold text-sm text-slate-900 truncate">{slotBooking.name}</p>
-                                  <p className="text-[11px] font-semibold text-slate-500 truncate">{slotBooking.formula} — {slotBooking.location}</p>
-                                </div>
-                                <span className={`shrink-0 text-[9px] uppercase font-extrabold px-2 py-0.5 rounded-full ${slotBooking.status === "Confirmé" ? "bg-emerald-600 text-white" : slotBooking.status === "En attente" ? "bg-amber-500 text-white" : "bg-slate-400 text-white"}`}>
-                                  {slotBooking.status}
-                                </span>
-                              </div>
-                            ) : (
-                              <span className="text-[11px] font-bold text-slate-300">Libre — cliquer pour planifier</span>
-                            )}
+                              }}
+                              className="rounded-xl p-3 cursor-pointer border border-dashed border-slate-200 hover:border-[--brand] hover:bg-[--brand]/5 transition-all"
+                            >
+                              <span className="text-[11px] font-bold text-slate-300">
+                                {slotBookings.length > 0 ? "Ajouter une autre réservation sur ce créneau" : "Libre — cliquer pour planifier"}
+                              </span>
+                            </div>
                           </div>
                         </div>
                       );
@@ -1394,29 +1319,53 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
                         <div className="text-[10px] font-extrabold text-slate-400 flex items-center justify-end pr-1.5">{t}</div>
                         {agendaWeekDates.map((d) => {
                           const dateStr = toDateStr(d);
-                          const slotBooking = bookings.find((b) => b.date === dateStr && b.time === t);
-                          return (
-                            <div
-                              key={dateStr}
-                              onClick={() => {
-                                if (slotBooking) {
-                                  openEditBookingModal(slotBooking);
-                                } else {
+                          // Plusieurs réservations peuvent partager un créneau (blocage retiré) —
+                          // on empile les chips au lieu de n'en montrer qu'une seule.
+                          const slotBookings = bookings.filter((b) => b.date === dateStr && b.time === t);
+                          const MAX_VISIBLE = 2;
+                          const visible = slotBookings.slice(0, MAX_VISIBLE);
+                          const hidden = slotBookings.length - visible.length;
+
+                          if (slotBookings.length === 0) {
+                            return (
+                              <div
+                                key={dateStr}
+                                onClick={() => {
                                   setBookingForm({ name: "", phone: "", location: "Studio", formula: "Studio — 5 photos", status: "Confirmé", date: dateStr, time: t });
                                   setIsBookingModalOpen(true);
-                                }
-                              }}
-                              title={slotBooking ? `${t} — ${slotBooking.name} (${slotBooking.status})` : `${t} — libre`}
-                              className={`min-h-[26px] rounded-md border text-[9px] font-extrabold px-1 py-1 flex items-center truncate cursor-pointer transition-colors ${slotBooking
-                                  ? slotBooking.status === "Confirmé"
-                                    ? "bg-emerald-500 border-emerald-600 text-white"
-                                    : slotBooking.status === "En attente"
-                                      ? "bg-amber-400 border-amber-500 text-white"
-                                      : "bg-slate-300 border-slate-400 text-white"
-                                  : "bg-slate-50 border-slate-200 hover:border-[--brand] hover:bg-[--brand]/5"
-                                }`}
-                            >
-                              {slotBooking ? slotBooking.name : ""}
+                                }}
+                                title={`${t} — libre`}
+                                className="min-h-[26px] rounded-md border bg-slate-50 border-slate-200 hover:border-[--brand] hover:bg-[--brand]/5 cursor-pointer transition-colors"
+                              />
+                            );
+                          }
+
+                          return (
+                            <div key={dateStr} className="space-y-[2px]">
+                              {visible.map((slotBooking) => (
+                                <div
+                                  key={slotBooking.id}
+                                  onClick={() => openEditBookingModal(slotBooking)}
+                                  title={`${t} — ${slotBooking.name} (${slotBooking.status})`}
+                                  className={`min-h-[22px] rounded-md border text-[9px] font-extrabold px-1 py-1 flex items-center truncate cursor-pointer transition-colors ${slotBooking.status === "Confirmé"
+                                      ? "bg-emerald-500 border-emerald-600 text-white"
+                                      : slotBooking.status === "En attente"
+                                        ? "bg-amber-400 border-amber-500 text-white"
+                                        : "bg-slate-300 border-slate-400 text-white"
+                                    }`}
+                                >
+                                  {slotBooking.name}
+                                </div>
+                              ))}
+                              {hidden > 0 && (
+                                <div
+                                  onClick={() => { setAgendaDate(d); setAgendaView("day"); }}
+                                  title="Voir tout sur la vue Jour"
+                                  className="text-[8px] font-extrabold text-slate-400 hover:text-[--brand] cursor-pointer px-1"
+                                >
+                                  +{hidden}
+                                </div>
+                              )}
                             </div>
                           );
                         })}
@@ -1950,18 +1899,18 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
 
         {/* MODAL PORTFOLIO PHOTO */}
         {isPhotoModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
-            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden border border-slate-100 anim-rise">
-              <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50">
-                <h3 className="font-extrabold text-base text-slate-900 flex items-center gap-2">
-                  <ImageIcon className="w-5 h-5 text-[--brand]" />
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/60 backdrop-blur-sm">
+            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg border border-slate-100 anim-rise max-h-[92vh] flex flex-col">
+              <div className="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50 rounded-t-3xl shrink-0">
+                <h3 className="font-extrabold text-sm sm:text-base text-slate-900 flex items-center gap-2">
+                  <ImageIcon className="w-5 h-5 text-[--brand] shrink-0" />
                   {editingItem ? "Modifier l'image Portfolio" : "Ajouter une nouvelle image"}
                 </h3>
-                <button onClick={() => setIsPhotoModalOpen(false)} className="text-slate-400 hover:text-slate-900 transition-colors">
+                <button onClick={() => setIsPhotoModalOpen(false)} className="text-slate-400 hover:text-slate-900 transition-colors shrink-0">
                   <XCircle className="w-5 h-5" />
                 </button>
               </div>
-              <form onSubmit={editingItem ? handleSaveEditPhoto : handleAddPhoto} className="p-6 space-y-4">
+              <form onSubmit={editingItem ? handleSaveEditPhoto : handleAddPhoto} className="p-4 sm:p-6 space-y-4 overflow-y-auto min-h-0">
                 {/* APERÇU DE L'IMAGE ET BOUTON DE REMPLACEMENT */}
                 {editingItem || newPhoto.src ? (
                   <div className="relative w-full h-52 bg-slate-100 rounded-2xl overflow-hidden border border-slate-200 group">
