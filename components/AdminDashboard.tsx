@@ -1244,7 +1244,7 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
 
                     // Case vides du début
                     for (let i = 0; i < startDayIndex; i++) {
-                      cells.push(<div key={`empty-${i}`} className="min-h-[95px] sm:min-h-[130px] bg-slate-50/50 rounded-2xl border border-dashed border-slate-100"></div>);
+                      cells.push(<div key={`empty-${i}`} className="min-h-[76px] sm:min-h-[110px] bg-slate-50/50 rounded-xl sm:rounded-2xl border border-dashed border-slate-100"></div>);
                     }
 
                     // Jours du mois
@@ -1257,6 +1257,10 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
                       // Filtrer les réservations de cette date
                       const dayBookings = bookings.filter((b) => b.date === dateStr);
 
+                      const MAX_CHIPS = 3;
+                      const visibleBookings = dayBookings.slice(0, MAX_CHIPS);
+                      const hiddenCount = dayBookings.length - visibleBookings.length;
+
                       cells.push(
                         <div
                           key={`day-${d}`}
@@ -1264,49 +1268,34 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
                             setBookingForm({ name: "", phone: "", location: "Studio", formula: "Studio — 5 photos", status: "Confirmé", date: dateStr, time: "15:00" });
                             setIsBookingModalOpen(true);
                           }}
-                          className={`min-h-[95px] sm:min-h-[130px] p-2 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between group hover:border-[--brand] hover:shadow-sm ${isToday ? "bg-amber-50/60 border-[--brand]" : "bg-white border-slate-200"
+                          className={`min-h-[76px] sm:min-h-[110px] p-1.5 sm:p-2 rounded-xl sm:rounded-2xl border transition-all cursor-pointer flex flex-col gap-1 group hover:border-[--brand] hover:shadow-sm ${isToday ? "bg-amber-50/60 border-[--brand]" : "bg-white border-slate-200"
                             }`}
                         >
-                          <div className="flex items-center justify-between">
-                            <span className={`w-6 h-6 rounded-full text-xs font-extrabold flex items-center justify-center ${isToday ? "bg-[--brand] text-white" : "text-slate-700 group-hover:bg-slate-100"
-                              }`}>
-                              {d}
-                            </span>
-                            {dayBookings.length > 0 && (
-                              <span className="bg-slate-900 text-white text-[9px] font-extrabold px-1.5 py-0.5 rounded-full">
-                                {dayBookings.length} RDV
-                              </span>
-                            )}
-                          </div>
+                          <span className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full text-[10px] sm:text-xs font-extrabold flex items-center justify-center shrink-0 ${isToday ? "bg-[--brand] text-white" : "text-slate-700 group-hover:bg-slate-100"
+                            }`}>
+                            {d}
+                          </span>
 
-                          {/* Grille des créneaux du jour — vert = libre, coloré = pris */}
-                          <div className="grid grid-cols-5 gap-[2px] mt-1">
-                            {TIME_SLOTS.map((t) => {
-                              const slotBooking = dayBookings.find((b) => b.time === t);
-                              return (
-                                <div
-                                  key={t}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    if (slotBooking) {
-                                      openEditBookingModal(slotBooking);
-                                    } else {
-                                      setBookingForm({ name: "", phone: "", location: "Studio", formula: "Studio — 5 photos", status: "Confirmé", date: dateStr, time: t });
-                                      setIsBookingModalOpen(true);
-                                    }
-                                  }}
-                                  title={slotBooking ? `${t} — ${slotBooking.name} (${slotBooking.status})` : `${t} — libre`}
-                                  className={`h-3 sm:h-3.5 rounded-[2px] border cursor-pointer ${slotBooking
-                                      ? slotBooking.status === "Confirmé"
-                                        ? "bg-emerald-500 border-emerald-600"
-                                        : slotBooking.status === "En attente"
-                                          ? "bg-amber-400 border-amber-500"
-                                          : "bg-slate-300 border-slate-400"
-                                      : "bg-slate-50 border-slate-200 hover:border-[--brand] hover:bg-[--brand]/5"
-                                    }`}
-                                />
-                              );
-                            })}
+                          {/* Chips des réservations du jour — nom + heure, façon Google Calendar */}
+                          <div className="space-y-0.5 overflow-hidden">
+                            {visibleBookings.map((b) => (
+                              <div
+                                key={b.id}
+                                onClick={(e) => { e.stopPropagation(); openEditBookingModal(b); }}
+                                title={`${b.time ? `${b.time} — ` : ""}${b.name} (${b.status})`}
+                                className={`px-1 sm:px-1.5 py-0.5 rounded text-[8px] sm:text-[10px] font-extrabold truncate border-l-2 cursor-pointer ${b.status === "Confirmé"
+                                    ? "bg-emerald-50 border-emerald-500 text-emerald-800"
+                                    : b.status === "En attente"
+                                      ? "bg-amber-50 border-amber-500 text-amber-800"
+                                      : "bg-slate-100 border-slate-400 text-slate-500"
+                                  }`}
+                              >
+                                {b.time && <span className="hidden sm:inline">{b.time} </span>}{b.name}
+                              </div>
+                            ))}
+                            {hiddenCount > 0 && (
+                              <div className="px-1 sm:px-1.5 text-[8px] sm:text-[9px] font-extrabold text-slate-400">+{hiddenCount}</div>
+                            )}
                           </div>
                         </div>
                       );
@@ -1316,12 +1305,11 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
                   })()}
                 </div>
 
-                {/* Légende de la grille de créneaux */}
+                {/* Légende des statuts */}
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-4 pt-3 border-t border-slate-100 text-[10px] font-bold text-slate-500">
-                  <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-[3px] bg-slate-50 border border-slate-200"></span> Créneau libre</span>
-                  <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-[3px] bg-amber-400 border border-amber-500"></span> En attente</span>
-                  <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-[3px] bg-emerald-500 border border-emerald-600"></span> Confirmé</span>
-                  <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-[3px] bg-slate-300 border border-slate-400"></span> Annulé</span>
+                  <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-amber-400"></span> En attente</span>
+                  <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Confirmé</span>
+                  <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-slate-300"></span> Annulé</span>
                 </div>
               </div>
             )}
@@ -1874,18 +1862,18 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
 
         {/* MODAL RÉSERVATION AVEC DATE & HEURE */}
         {isBookingModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
-            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-100 anim-rise">
-              <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50">
-                <h3 className="font-extrabold text-base text-slate-900 flex items-center gap-2">
-                  <CalendarPlus className="w-4 h-4 text-[--brand]" />
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/60 backdrop-blur-sm">
+            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md border border-slate-100 anim-rise max-h-[92vh] flex flex-col">
+              <div className="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50 rounded-t-3xl shrink-0">
+                <h3 className="font-extrabold text-sm sm:text-base text-slate-900 flex items-center gap-2">
+                  <CalendarPlus className="w-4 h-4 text-[--brand] shrink-0" />
                   {editingBookingId ? "Modifier la Séance Photo" : "Planifier une Séance Photo"}
                 </h3>
-                <button onClick={() => setIsBookingModalOpen(false)} className="text-slate-400 hover:text-slate-900 transition-colors">
+                <button onClick={() => setIsBookingModalOpen(false)} className="text-slate-400 hover:text-slate-900 transition-colors shrink-0">
                   <XCircle className="w-5 h-5" />
                 </button>
               </div>
-              <form onSubmit={handleSaveBooking} className="p-6 space-y-4">
+              <form onSubmit={handleSaveBooking} className="p-4 sm:p-6 space-y-4 overflow-y-auto min-h-0">
                 <div>
                   <label className="block text-xs font-extrabold text-slate-600 mb-1.5">Nom du client *</label>
                   <input type="text" required value={bookingForm.name} onChange={e => setBookingForm({ ...bookingForm, name: e.target.value })} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 focus:border-[--brand] rounded-xl text-xs font-bold focus:outline-none" />
@@ -1902,7 +1890,7 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
                   </div>
                   <div>
                     <label className="block text-xs font-extrabold text-[--brand] mb-1">Heure de Séance</label>
-                    <div className="grid grid-cols-3 gap-1.5">
+                    <div className="grid grid-cols-4 sm:grid-cols-5 gap-1.5">
                       {TIME_SLOTS.map((t) => {
                         const isBusy = bookedSlotsForForm.includes(t);
                         const isSelected = bookingForm.time === t;
@@ -1912,7 +1900,7 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
                             type="button"
                             onClick={() => setBookingForm({ ...bookingForm, time: t })}
                             title={isBusy ? "Un autre client est déjà sur ce créneau — vous pouvez quand même le choisir" : undefined}
-                            className={`relative py-2 rounded-lg text-[11px] font-extrabold border transition-all ${
+                            className={`relative py-2 rounded-lg text-[10px] sm:text-[11px] font-extrabold border transition-all ${
                               isSelected
                                 ? "bg-[--brand] border-[--brand] text-white shadow-sm"
                                 : "bg-white border-slate-200 text-slate-600 hover:border-[--brand]"
