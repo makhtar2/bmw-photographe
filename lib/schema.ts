@@ -1,8 +1,14 @@
 import { z } from "zod";
 
-// Créneaux horaires proposés pour une séance (horaires d'ouverture du studio).
+// Créneaux horaires proposés pour une séance (horaires d'ouverture du studio,
+// pause déjeuner 12h-14h exclue). Les séances (mariages, événements) peuvent
+// se prolonger tard, jusqu'à minuit.
 // Partagé entre le formulaire client et le planning admin pour rester cohérent.
-export const TIME_SLOTS = ["09:00", "10:00", "11:00", "12:00", "14:00", "15:00", "16:00", "17:00", "18:00"];
+export const TIME_SLOTS = [
+  "09:00", "10:00", "11:00", "12:00",
+  "14:00", "15:00", "16:00", "17:00", "18:00",
+  "19:00", "20:00", "21:00", "22:00", "23:00", "00:00",
+];
 
 export const bookingSchema = z.object({
   name: z.string()

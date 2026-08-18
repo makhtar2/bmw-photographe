@@ -34,7 +34,9 @@ import {
   Download,
   Share,
   Star,
-  X
+  X,
+  CalendarRange,
+  Grid3x3
 } from "lucide-react";
 import Image from "next/image";
 
@@ -137,6 +139,26 @@ BMW Photographe`;
   return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(text)}`;
 }
 
+function toDateStr(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+function addDays(d: Date, n: number): Date {
+  const date = new Date(d);
+  date.setDate(date.getDate() + n);
+  return date;
+}
+
+// Lundi de la semaine contenant `d` (convention FR : la semaine commence le lundi).
+function startOfWeek(d: Date): Date {
+  const date = new Date(d);
+  const day = date.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  date.setDate(date.getDate() + diff);
+  date.setHours(0, 0, 0, 0);
+  return date;
+}
+
 export default function AdminDashboard({ initialSettings, initialBookings, initialPortfolio, initialPromo, currentRoute }: AdminDashboardProps) {
   const pathname = usePathname();
   const activeTab = (currentRoute || pathname) === "/admin/agenda"
@@ -192,7 +214,7 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
   const [pushEnabled, setPushEnabled] = useState(false);
 
   // Agenda State
-  const [agendaView, setAgendaView] = useState<"grid" | "list">("grid");
+  const [agendaView, setAgendaView] = useState<"day" | "week" | "month" | "year" | "list">("month");
   const [agendaDate, setAgendaDate] = useState<Date>(new Date());
 
   // Filtres réservations
@@ -661,6 +683,30 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
       return acc;
     }, 0);
 
+  // Navigation & libellé de la barre de période — dépendent de la vue active
+  // (jour/semaine/mois/année), comme dans Google Calendar.
+  const agendaWeekDates = Array.from({ length: 7 }, (_, i) => addDays(startOfWeek(agendaDate), i));
+
+  const agendaPrev = agendaView === "day" ? addDays(agendaDate, -1)
+    : agendaView === "week" ? addDays(agendaDate, -7)
+      : agendaView === "year" ? new Date(agendaDate.getFullYear() - 1, agendaDate.getMonth(), 1)
+        : new Date(agendaDate.getFullYear(), agendaDate.getMonth() - 1, 1);
+
+  const agendaNext = agendaView === "day" ? addDays(agendaDate, 1)
+    : agendaView === "week" ? addDays(agendaDate, 7)
+      : agendaView === "year" ? new Date(agendaDate.getFullYear() + 1, agendaDate.getMonth(), 1)
+        : new Date(agendaDate.getFullYear(), agendaDate.getMonth() + 1, 1);
+
+  const agendaPeriodLabel = agendaView === "day"
+    ? agendaDate.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" })
+    : agendaView === "week"
+      ? `${agendaWeekDates[0].toLocaleDateString("fr-FR", { day: "numeric", month: "short" })} – ${agendaWeekDates[6].toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" })}`
+      : agendaView === "year"
+        ? String(agendaDate.getFullYear())
+        : agendaView === "list"
+          ? "Toutes les réservations"
+          : agendaDate.toLocaleDateString("fr-FR", { month: "long", year: "numeric" });
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans pb-24 md:pb-12">
 
@@ -1099,7 +1145,7 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
                 <h3 className="text-base sm:text-xl font-extrabold text-white flex items-center justify-center md:justify-start gap-2">
                   <CalendarIcon className="w-5 h-5 text-[--brand] shrink-0" /> Agenda des Séances Photo
                 </h3>
-                <p className="text-[11px] sm:text-xs text-slate-400 font-semibold">Visualisez votre calendrier mensuel ou vue chronologique.</p>
+                <p className="text-[11px] sm:text-xs text-slate-400 font-semibold">Vue Jour, Semaine, Mois, Année ou Liste — comme sur Google Calendar.</p>
               </div>
 
               <div className="flex items-center gap-3 w-full md:w-auto">
@@ -1113,26 +1159,28 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
               </div>
             </div>
 
-            {/* Barre de navigation du mois & sélecteur de mode */}
+            {/* Barre de navigation de la période & sélecteur de vue */}
             <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
-              {/* Controls de mois */}
+              {/* Controls de période */}
               <div className="flex items-center gap-3">
                 <button
-                  onClick={() => setAgendaDate(new Date(agendaDate.getFullYear(), agendaDate.getMonth() - 1, 1))}
-                  className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-colors"
-                  title="Mois précédent"
+                  onClick={() => setAgendaDate(agendaPrev)}
+                  disabled={agendaView === "list"}
+                  className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                  title="Période précédente"
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </button>
 
-                <h4 className="text-base font-extrabold text-slate-900 capitalize min-w-[140px] text-center">
-                  {agendaDate.toLocaleDateString("fr-FR", { month: "long", year: "numeric" })}
+                <h4 className="text-sm sm:text-base font-extrabold text-slate-900 capitalize min-w-[160px] text-center">
+                  {agendaPeriodLabel}
                 </h4>
 
                 <button
-                  onClick={() => setAgendaDate(new Date(agendaDate.getFullYear(), agendaDate.getMonth() + 1, 1))}
-                  className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-colors"
-                  title="Mois suivant"
+                  onClick={() => setAgendaDate(agendaNext)}
+                  disabled={agendaView === "list"}
+                  className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                  title="Période suivante"
                 >
                   <ChevronRight className="w-4 h-4" />
                 </button>
@@ -1145,27 +1193,29 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
                 </button>
               </div>
 
-              {/* Mode d'affichage Grid / List */}
-              <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
-                <button
-                  onClick={() => setAgendaView("grid")}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-extrabold transition-all ${agendaView === "grid" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-900"
-                    }`}
-                >
-                  <Grid className="w-3.5 h-3.5" /> Grille Mensuelle
-                </button>
-                <button
-                  onClick={() => setAgendaView("list")}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-extrabold transition-all ${agendaView === "list" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-900"
-                    }`}
-                >
-                  <List className="w-3.5 h-3.5" /> Vue Liste ({bookings.length})
-                </button>
+              {/* Sélecteur de vue — comme Google Calendar : Jour / Semaine / Mois / Année / Liste */}
+              <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200 overflow-x-auto no-scrollbar">
+                {([
+                  { key: "day", label: "Jour", icon: Clock },
+                  { key: "week", label: "Semaine", icon: CalendarRange },
+                  { key: "month", label: "Mois", icon: Grid },
+                  { key: "year", label: "Année", icon: Grid3x3 },
+                  { key: "list", label: `Liste (${bookings.length})`, icon: List },
+                ] as const).map(({ key, label, icon: Icon }) => (
+                  <button
+                    key={key}
+                    onClick={() => setAgendaView(key)}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-extrabold transition-all whitespace-nowrap shrink-0 ${agendaView === key ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-900"
+                      }`}
+                  >
+                    <Icon className="w-3.5 h-3.5" /> {label}
+                  </button>
+                ))}
               </div>
             </div>
 
-            {/* VUE GRILLE MENSUELLE */}
-            {agendaView === "grid" && (
+            {/* VUE MOIS */}
+            {agendaView === "month" && (
               <div className="bg-white border border-slate-200 rounded-3xl p-4 sm:p-6 shadow-sm">
                 {/* En-tête des jours de la semaine */}
                 <div className="grid grid-cols-7 gap-1 sm:gap-2 mb-2 text-center text-[11px] font-extrabold uppercase tracking-wider text-slate-400 border-b border-slate-100 pb-3">
@@ -1188,7 +1238,7 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
 
                     // Case vides du début
                     for (let i = 0; i < startDayIndex; i++) {
-                      cells.push(<div key={`empty-${i}`} className="min-h-[80px] sm:min-h-[110px] bg-slate-50/50 rounded-2xl border border-dashed border-slate-100"></div>);
+                      cells.push(<div key={`empty-${i}`} className="min-h-[95px] sm:min-h-[130px] bg-slate-50/50 rounded-2xl border border-dashed border-slate-100"></div>);
                     }
 
                     // Jours du mois
@@ -1208,7 +1258,7 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
                             setBookingForm({ name: "", phone: "", location: "Studio", formula: "Studio — 5 photos", status: "Confirmé", date: dateStr, time: "15:00" });
                             setIsBookingModalOpen(true);
                           }}
-                          className={`min-h-[80px] sm:min-h-[110px] p-2 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between group hover:border-[--brand] hover:shadow-sm ${isToday ? "bg-amber-50/60 border-[--brand]" : "bg-white border-slate-200"
+                          className={`min-h-[95px] sm:min-h-[130px] p-2 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between group hover:border-[--brand] hover:shadow-sm ${isToday ? "bg-amber-50/60 border-[--brand]" : "bg-white border-slate-200"
                             }`}
                         >
                           <div className="flex items-center justify-between">
@@ -1224,7 +1274,7 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
                           </div>
 
                           {/* Grille des créneaux du jour — vert = libre, coloré = pris */}
-                          <div className="grid grid-cols-3 gap-[3px] mt-1">
+                          <div className="grid grid-cols-5 gap-[2px] mt-1">
                             {TIME_SLOTS.map((t) => {
                               const slotBooking = dayBookings.find((b) => b.time === t);
                               return (
@@ -1240,17 +1290,15 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
                                     }
                                   }}
                                   title={slotBooking ? `${t} — ${slotBooking.name} (${slotBooking.status})` : `${t} — libre`}
-                                  className={`h-3.5 sm:h-4 rounded-[3px] border text-[6px] sm:text-[7px] font-extrabold flex items-center justify-center leading-none cursor-pointer ${slotBooking
+                                  className={`h-3 sm:h-3.5 rounded-[2px] border cursor-pointer ${slotBooking
                                       ? slotBooking.status === "Confirmé"
-                                        ? "bg-emerald-500 border-emerald-600 text-white"
+                                        ? "bg-emerald-500 border-emerald-600"
                                         : slotBooking.status === "En attente"
-                                          ? "bg-amber-400 border-amber-500 text-white"
-                                          : "bg-slate-300 border-slate-400 text-white"
-                                      : "bg-slate-50 border-slate-200 text-slate-300 hover:border-[--brand] hover:bg-[--brand]/5"
+                                          ? "bg-amber-400 border-amber-500"
+                                          : "bg-slate-300 border-slate-400"
+                                      : "bg-slate-50 border-slate-200 hover:border-[--brand] hover:bg-[--brand]/5"
                                     }`}
-                                >
-                                  {slotBooking ? t.slice(0, 2) : ""}
-                                </div>
+                                />
                               );
                             })}
                           </div>
@@ -1269,6 +1317,168 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
                   <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-[3px] bg-emerald-500 border border-emerald-600"></span> Confirmé</span>
                   <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-[3px] bg-slate-300 border border-slate-400"></span> Annulé</span>
                 </div>
+              </div>
+            )}
+
+            {/* VUE JOUR */}
+            {agendaView === "day" && (() => {
+              const dateStr = toDateStr(agendaDate);
+              const dayBookings = bookings.filter((b) => b.date === dateStr);
+              return (
+                <div className="bg-white border border-slate-200 rounded-3xl p-4 sm:p-6 shadow-sm">
+                  <div className="divide-y divide-slate-100">
+                    {TIME_SLOTS.map((t) => {
+                      const slotBooking = dayBookings.find((b) => b.time === t);
+                      return (
+                        <div key={t} className="flex items-stretch gap-3 py-1.5">
+                          <div className="w-12 sm:w-14 shrink-0 text-xs font-extrabold text-slate-400 pt-3">{t}</div>
+                          <div
+                            onClick={() => {
+                              if (slotBooking) {
+                                openEditBookingModal(slotBooking);
+                              } else {
+                                setBookingForm({ name: "", phone: "", location: "Studio", formula: "Studio — 5 photos", status: "Confirmé", date: dateStr, time: t });
+                                setIsBookingModalOpen(true);
+                              }
+                            }}
+                            className={`flex-1 rounded-xl p-3 cursor-pointer border transition-all ${slotBooking
+                                ? slotBooking.status === "Confirmé"
+                                  ? "bg-emerald-50 border-emerald-200 hover:border-emerald-400"
+                                  : slotBooking.status === "En attente"
+                                    ? "bg-amber-50 border-amber-200 hover:border-amber-400"
+                                    : "bg-slate-100 border-slate-200 hover:border-slate-400"
+                                : "border-dashed border-slate-200 hover:border-[--brand] hover:bg-[--brand]/5"
+                              }`}
+                          >
+                            {slotBooking ? (
+                              <div className="flex items-center justify-between gap-2">
+                                <div className="min-w-0">
+                                  <p className="font-extrabold text-sm text-slate-900 truncate">{slotBooking.name}</p>
+                                  <p className="text-[11px] font-semibold text-slate-500 truncate">{slotBooking.formula} — {slotBooking.location}</p>
+                                </div>
+                                <span className={`shrink-0 text-[9px] uppercase font-extrabold px-2 py-0.5 rounded-full ${slotBooking.status === "Confirmé" ? "bg-emerald-600 text-white" : slotBooking.status === "En attente" ? "bg-amber-500 text-white" : "bg-slate-400 text-white"}`}>
+                                  {slotBooking.status}
+                                </span>
+                              </div>
+                            ) : (
+                              <span className="text-[11px] font-bold text-slate-300">Libre — cliquer pour planifier</span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* VUE SEMAINE */}
+            {agendaView === "week" && (
+              <div className="bg-white border border-slate-200 rounded-3xl p-3 sm:p-5 shadow-sm overflow-x-auto">
+                <div className="min-w-[760px]">
+                  <div className="grid grid-cols-[52px_repeat(7,1fr)] gap-1 mb-2">
+                    <div></div>
+                    {agendaWeekDates.map((d) => {
+                      const isToday = toDateStr(d) === new Date().toISOString().slice(0, 10);
+                      return (
+                        <div
+                          key={d.toISOString()}
+                          onClick={() => { setAgendaDate(d); setAgendaView("day"); }}
+                          className={`text-center py-2 rounded-xl text-[10px] font-extrabold uppercase tracking-wider cursor-pointer transition-colors ${isToday ? "bg-[--brand]/10 text-[--brand]" : "text-slate-500 hover:bg-slate-100"
+                            }`}
+                        >
+                          {d.toLocaleDateString("fr-FR", { weekday: "short" })}
+                          <div className="text-sm text-slate-900 font-extrabold normal-case">{d.getDate()}</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <div className="space-y-[3px]">
+                    {TIME_SLOTS.map((t) => (
+                      <div key={t} className="grid grid-cols-[52px_repeat(7,1fr)] gap-1">
+                        <div className="text-[10px] font-extrabold text-slate-400 flex items-center justify-end pr-1.5">{t}</div>
+                        {agendaWeekDates.map((d) => {
+                          const dateStr = toDateStr(d);
+                          const slotBooking = bookings.find((b) => b.date === dateStr && b.time === t);
+                          return (
+                            <div
+                              key={dateStr}
+                              onClick={() => {
+                                if (slotBooking) {
+                                  openEditBookingModal(slotBooking);
+                                } else {
+                                  setBookingForm({ name: "", phone: "", location: "Studio", formula: "Studio — 5 photos", status: "Confirmé", date: dateStr, time: t });
+                                  setIsBookingModalOpen(true);
+                                }
+                              }}
+                              title={slotBooking ? `${t} — ${slotBooking.name} (${slotBooking.status})` : `${t} — libre`}
+                              className={`min-h-[26px] rounded-md border text-[9px] font-extrabold px-1 py-1 flex items-center truncate cursor-pointer transition-colors ${slotBooking
+                                  ? slotBooking.status === "Confirmé"
+                                    ? "bg-emerald-500 border-emerald-600 text-white"
+                                    : slotBooking.status === "En attente"
+                                      ? "bg-amber-400 border-amber-500 text-white"
+                                      : "bg-slate-300 border-slate-400 text-white"
+                                  : "bg-slate-50 border-slate-200 hover:border-[--brand] hover:bg-[--brand]/5"
+                                }`}
+                            >
+                              {slotBooking ? slotBooking.name : ""}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* VUE ANNÉE */}
+            {agendaView === "year" && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {Array.from({ length: 12 }, (_, m) => {
+                  const year = agendaDate.getFullYear();
+                  const firstDay = new Date(year, m, 1);
+                  let startDayIndex = firstDay.getDay() - 1;
+                  if (startDayIndex === -1) startDayIndex = 6;
+                  const daysInMonth = new Date(year, m + 1, 0).getDate();
+                  const todayStr = new Date().toISOString().slice(0, 10);
+
+                  return (
+                    <div key={m} className="bg-white border border-slate-200 rounded-2xl p-3.5">
+                      <h5 className="text-xs font-extrabold text-slate-900 capitalize mb-2 text-center">
+                        {firstDay.toLocaleDateString("fr-FR", { month: "long" })}
+                      </h5>
+                      <div className="grid grid-cols-7 gap-0.5 text-center text-[8px] font-extrabold text-slate-300 mb-1">
+                        {["L", "M", "M", "J", "V", "S", "D"].map((c, i) => <div key={i}>{c}</div>)}
+                      </div>
+                      <div className="grid grid-cols-7 gap-0.5">
+                        {Array.from({ length: startDayIndex }, (_, i) => <div key={`e-${i}`} />)}
+                        {Array.from({ length: daysInMonth }, (_, i) => {
+                          const d = i + 1;
+                          const dateStr = `${year}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                          const hasBookings = bookings.some((b) => b.date === dateStr);
+                          const isToday = dateStr === todayStr;
+                          return (
+                            <button
+                              key={d}
+                              type="button"
+                              onClick={() => { setAgendaDate(new Date(year, m, d)); setAgendaView("day"); }}
+                              className={`aspect-square rounded-md text-[9px] font-bold flex items-center justify-center transition-colors ${isToday
+                                  ? "bg-[--brand] text-white"
+                                  : hasBookings
+                                    ? "bg-[--brand]/15 text-[--brand] hover:bg-[--brand]/25"
+                                    : "text-slate-500 hover:bg-slate-100"
+                                }`}
+                            >
+                              {d}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
 
