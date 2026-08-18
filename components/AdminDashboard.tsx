@@ -35,8 +35,7 @@ import {
   Share,
   Star,
   X,
-  CalendarRange,
-  Grid3x3
+  CalendarRange
 } from "lucide-react";
 import Image from "next/image";
 
@@ -214,7 +213,7 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
   const [pushEnabled, setPushEnabled] = useState(false);
 
   // Agenda State
-  const [agendaView, setAgendaView] = useState<"day" | "week" | "month" | "year" | "list">("month");
+  const [agendaView, setAgendaView] = useState<"day" | "week" | "month" | "list">("month");
   const [agendaDate, setAgendaDate] = useState<Date>(new Date());
 
   // Filtres réservations
@@ -684,28 +683,24 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
     }, 0);
 
   // Navigation & libellé de la barre de période — dépendent de la vue active
-  // (jour/semaine/mois/année), comme dans Google Calendar.
+  // (jour/semaine/mois), comme dans Google Calendar.
   const agendaWeekDates = Array.from({ length: 7 }, (_, i) => addDays(startOfWeek(agendaDate), i));
 
   const agendaPrev = agendaView === "day" ? addDays(agendaDate, -1)
     : agendaView === "week" ? addDays(agendaDate, -7)
-      : agendaView === "year" ? new Date(agendaDate.getFullYear() - 1, agendaDate.getMonth(), 1)
-        : new Date(agendaDate.getFullYear(), agendaDate.getMonth() - 1, 1);
+      : new Date(agendaDate.getFullYear(), agendaDate.getMonth() - 1, 1);
 
   const agendaNext = agendaView === "day" ? addDays(agendaDate, 1)
     : agendaView === "week" ? addDays(agendaDate, 7)
-      : agendaView === "year" ? new Date(agendaDate.getFullYear() + 1, agendaDate.getMonth(), 1)
-        : new Date(agendaDate.getFullYear(), agendaDate.getMonth() + 1, 1);
+      : new Date(agendaDate.getFullYear(), agendaDate.getMonth() + 1, 1);
 
   const agendaPeriodLabel = agendaView === "day"
     ? agendaDate.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" })
     : agendaView === "week"
       ? `${agendaWeekDates[0].toLocaleDateString("fr-FR", { day: "numeric", month: "short" })} – ${agendaWeekDates[6].toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" })}`
-      : agendaView === "year"
-        ? String(agendaDate.getFullYear())
-        : agendaView === "list"
-          ? "Toutes les réservations"
-          : agendaDate.toLocaleDateString("fr-FR", { month: "long", year: "numeric" });
+      : agendaView === "list"
+        ? "Toutes les réservations"
+        : agendaDate.toLocaleDateString("fr-FR", { month: "long", year: "numeric" });
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans pb-24 md:pb-12">
@@ -945,15 +940,22 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
                       </span>
                     </div>
 
-                    <div className="bg-slate-50 p-3 rounded-xl space-y-1 text-xs">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[9px] uppercase font-extrabold tracking-wider text-[--brand]">{b.location}</span>
-                        {b.date && (
-                          <span className="text-[10px] font-extrabold text-slate-600 flex items-center gap-1">
-                            <Clock className="w-3 h-3 text-[--brand]" /> {b.date} {b.time ? `à ${b.time}` : ''}
-                          </span>
-                        )}
+                    {b.date ? (
+                      <div className="inline-flex items-center gap-2 bg-[--brand]/10 border border-[--brand]/20 rounded-xl px-3 py-1.5">
+                        <span className="font-extrabold text-slate-900 text-xs whitespace-nowrap">
+                          {new Date(b.date).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric" })}
+                        </span>
+                        <span className="w-px h-3 bg-[--brand]/30 shrink-0"></span>
+                        <span className="flex items-center gap-1 font-extrabold text-[--brand] text-xs whitespace-nowrap">
+                          <Clock className="w-3 h-3" /> {b.time || "15:00"}
+                        </span>
                       </div>
+                    ) : (
+                      <span className="inline-block text-slate-400 italic text-[11px]">Date non spécifiée</span>
+                    )}
+
+                    <div className="bg-slate-50 p-3 rounded-xl space-y-1 text-xs">
+                      <span className="text-[9px] uppercase font-extrabold tracking-wider text-[--brand]">{b.location}</span>
                       <p className="font-extrabold text-slate-900">{b.formula}</p>
                     </div>
 
@@ -1057,9 +1059,14 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
 
                           <td className="px-6 py-4">
                             {booking.date ? (
-                              <div className="font-extrabold text-slate-900 text-xs flex items-center gap-1.5">
-                                <Clock className="w-3.5 h-3.5 text-[--brand]" />
-                                {new Date(booking.date).toLocaleDateString("fr-FR")} à {booking.time || "15:00"}
+                              <div className="inline-flex items-center gap-2 bg-[--brand]/10 border border-[--brand]/20 rounded-xl px-3 py-1.5">
+                                <span className="font-extrabold text-slate-900 text-xs whitespace-nowrap">
+                                  {new Date(booking.date).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric" })}
+                                </span>
+                                <span className="w-px h-3 bg-[--brand]/30 shrink-0"></span>
+                                <span className="flex items-center gap-1 font-extrabold text-[--brand] text-xs whitespace-nowrap">
+                                  <Clock className="w-3 h-3" /> {booking.time || "15:00"}
+                                </span>
                               </div>
                             ) : (
                               <span className="text-slate-400 italic text-[11px]">Non spécifiée</span>
@@ -1145,7 +1152,7 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
                 <h3 className="text-base sm:text-xl font-extrabold text-white flex items-center justify-center md:justify-start gap-2">
                   <CalendarIcon className="w-5 h-5 text-[--brand] shrink-0" /> Agenda des Séances Photo
                 </h3>
-                <p className="text-[11px] sm:text-xs text-slate-400 font-semibold">Vue Jour, Semaine, Mois, Année ou Liste — comme sur Google Calendar.</p>
+                <p className="text-[11px] sm:text-xs text-slate-400 font-semibold">Vue Jour, Semaine, Mois ou Liste — comme sur Google Calendar.</p>
               </div>
 
               <div className="flex items-center gap-3 w-full md:w-auto">
@@ -1160,26 +1167,26 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
             </div>
 
             {/* Barre de navigation de la période & sélecteur de vue */}
-            <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="bg-white p-3 sm:p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col gap-3 sm:gap-4">
               {/* Controls de période */}
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center justify-center gap-2">
                 <button
                   onClick={() => setAgendaDate(agendaPrev)}
                   disabled={agendaView === "list"}
-                  className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                  className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-colors disabled:opacity-30 disabled:cursor-not-allowed shrink-0"
                   title="Période précédente"
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </button>
 
-                <h4 className="text-sm sm:text-base font-extrabold text-slate-900 capitalize min-w-[160px] text-center">
+                <h4 className="text-xs sm:text-base font-extrabold text-slate-900 capitalize text-center px-1 order-first w-full sm:order-none sm:w-auto sm:min-w-[160px]">
                   {agendaPeriodLabel}
                 </h4>
 
                 <button
                   onClick={() => setAgendaDate(agendaNext)}
                   disabled={agendaView === "list"}
-                  className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                  className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-colors disabled:opacity-30 disabled:cursor-not-allowed shrink-0"
                   title="Période suivante"
                 >
                   <ChevronRight className="w-4 h-4" />
@@ -1187,28 +1194,27 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
 
                 <button
                   onClick={() => setAgendaDate(new Date())}
-                  className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-extrabold transition-colors"
+                  className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-extrabold transition-colors shrink-0"
                 >
                   Aujourd’hui
                 </button>
               </div>
 
-              {/* Sélecteur de vue — comme Google Calendar : Jour / Semaine / Mois / Année / Liste */}
-              <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200 overflow-x-auto no-scrollbar">
+              {/* Sélecteur de vue — comme Google Calendar : Jour / Semaine / Mois / Liste */}
+              <div className="flex items-center justify-center sm:justify-start bg-slate-100 p-1 rounded-xl border border-slate-200 overflow-x-auto no-scrollbar w-full">
                 {([
                   { key: "day", label: "Jour", icon: Clock },
                   { key: "week", label: "Semaine", icon: CalendarRange },
                   { key: "month", label: "Mois", icon: Grid },
-                  { key: "year", label: "Année", icon: Grid3x3 },
                   { key: "list", label: `Liste (${bookings.length})`, icon: List },
                 ] as const).map(({ key, label, icon: Icon }) => (
                   <button
                     key={key}
                     onClick={() => setAgendaView(key)}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-extrabold transition-all whitespace-nowrap shrink-0 ${agendaView === key ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-900"
+                    className={`flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-[11px] sm:text-xs font-extrabold transition-all whitespace-nowrap ${agendaView === key ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-900"
                       }`}
                   >
-                    <Icon className="w-3.5 h-3.5" /> {label}
+                    <Icon className="w-3.5 h-3.5 shrink-0" /> {label}
                   </button>
                 ))}
               </div>
@@ -1433,55 +1439,6 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
               </div>
             )}
 
-            {/* VUE ANNÉE */}
-            {agendaView === "year" && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {Array.from({ length: 12 }, (_, m) => {
-                  const year = agendaDate.getFullYear();
-                  const firstDay = new Date(year, m, 1);
-                  let startDayIndex = firstDay.getDay() - 1;
-                  if (startDayIndex === -1) startDayIndex = 6;
-                  const daysInMonth = new Date(year, m + 1, 0).getDate();
-                  const todayStr = new Date().toISOString().slice(0, 10);
-
-                  return (
-                    <div key={m} className="bg-white border border-slate-200 rounded-2xl p-3.5">
-                      <h5 className="text-xs font-extrabold text-slate-900 capitalize mb-2 text-center">
-                        {firstDay.toLocaleDateString("fr-FR", { month: "long" })}
-                      </h5>
-                      <div className="grid grid-cols-7 gap-0.5 text-center text-[8px] font-extrabold text-slate-300 mb-1">
-                        {["L", "M", "M", "J", "V", "S", "D"].map((c, i) => <div key={i}>{c}</div>)}
-                      </div>
-                      <div className="grid grid-cols-7 gap-0.5">
-                        {Array.from({ length: startDayIndex }, (_, i) => <div key={`e-${i}`} />)}
-                        {Array.from({ length: daysInMonth }, (_, i) => {
-                          const d = i + 1;
-                          const dateStr = `${year}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-                          const hasBookings = bookings.some((b) => b.date === dateStr);
-                          const isToday = dateStr === todayStr;
-                          return (
-                            <button
-                              key={d}
-                              type="button"
-                              onClick={() => { setAgendaDate(new Date(year, m, d)); setAgendaView("day"); }}
-                              className={`aspect-square rounded-md text-[9px] font-bold flex items-center justify-center transition-colors ${isToday
-                                  ? "bg-[--brand] text-white"
-                                  : hasBookings
-                                    ? "bg-[--brand]/15 text-[--brand] hover:bg-[--brand]/25"
-                                    : "text-slate-500 hover:bg-slate-100"
-                                }`}
-                            >
-                              {d}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-
             {/* VUE LISTE / CHRONOLOGIQUE */}
             {agendaView === "list" && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -1504,14 +1461,22 @@ export default function AdminDashboard({ initialSettings, initialBookings, initi
                       </span>
                     </div>
 
-                    <div className="bg-slate-50 p-3 rounded-xl space-y-1.5 text-xs">
-                      <div className="flex items-center justify-between text-slate-600 font-extrabold">
-                        <span className="flex items-center gap-1 text-[--brand]">
-                          <Clock className="w-3.5 h-3.5" />
-                          {b.date ? `${new Date(b.date).toLocaleDateString("fr-FR")} à ${b.time || "15:00"}` : "Date à fixer"}
+                    {b.date ? (
+                      <div className="inline-flex items-center gap-2 bg-[--brand]/10 border border-[--brand]/20 rounded-xl px-3 py-1.5">
+                        <span className="font-extrabold text-slate-900 text-xs whitespace-nowrap">
+                          {new Date(b.date).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric" })}
                         </span>
-                        <span className="text-[10px] uppercase font-bold text-slate-500">{b.location}</span>
+                        <span className="w-px h-3 bg-[--brand]/30 shrink-0"></span>
+                        <span className="flex items-center gap-1 font-extrabold text-[--brand] text-xs whitespace-nowrap">
+                          <Clock className="w-3 h-3" /> {b.time || "15:00"}
+                        </span>
                       </div>
+                    ) : (
+                      <span className="inline-block text-slate-400 italic text-[11px]">Date à fixer</span>
+                    )}
+
+                    <div className="bg-slate-50 p-3 rounded-xl space-y-1.5 text-xs">
+                      <span className="text-[10px] uppercase font-bold text-slate-500">{b.location}</span>
                       <p className="font-extrabold text-slate-900 truncate">{b.formula}</p>
                     </div>
 
