@@ -14,16 +14,6 @@ export type ActionState = {
 
 // ── RÉSERVATION CLIENT ──
 
-// Créneaux déjà réservés (hors annulations) pour une date donnée — utilisé
-// par le formulaire client pour ne pas proposer un horaire déjà pris.
-export async function getBookedSlots(date: string): Promise<string[]> {
-  if (!date) return [];
-  const db = await getDb();
-  return db.bookings
-    .filter((b) => b.date === date && b.status !== "Annulé" && b.time)
-    .map((b) => b.time!);
-}
-
 export async function submitBooking(data: BookingInput): Promise<ActionState> {
   const result = bookingSchema.safeParse(data);
 

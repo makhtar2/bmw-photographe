@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { bookingSchema, BookingInput, TIME_SLOTS } from "../lib/schema";
-import { submitBooking, getBookedSlots } from "../app/actions";
+import { submitBooking } from "../app/actions";
 import MaterialIcon from "./MaterialIcon";
 import { PricesSettings, PricePackage } from "../lib/db";
 
@@ -17,7 +17,6 @@ export default function BookingForm({ settings, id = "reservation" }: BookingFor
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
-  const [bookedSlots, setBookedSlots] = useState<string[]>([]);
 
   const {
     register,
@@ -33,20 +32,6 @@ export default function BookingForm({ settings, id = "reservation" }: BookingFor
   const loc = watch("location");
   const selectedDate = watch("date");
   const selectedTime = watch("time");
-
-  // Recharge les créneaux déjà pris à chaque changement de date, pour ne pas
-  // proposer un horaire déjà réservé par un autre client.
-  useEffect(() => {
-    if (!selectedDate) {
-      setBookedSlots([]);
-      return;
-    }
-    let cancelled = false;
-    getBookedSlots(selectedDate).then((slots) => {
-      if (!cancelled) setBookedSlots(slots);
-    });
-    return () => { cancelled = true; };
-  }, [selectedDate]);
 
   const formulaOption = (pkg: PricePackage) => {
     const text = `${pkg.label} — ${pkg.price.toLocaleString("fr-FR")} FCFA`;
@@ -210,24 +195,19 @@ export default function BookingForm({ settings, id = "reservation" }: BookingFor
                 ) : (
                   <div className="grid grid-cols-3 gap-2">
                     {TIME_SLOTS.map((t) => {
-                      const isBusy = bookedSlots.includes(t);
                       const isSelected = selectedTime === t;
                       return (
                         <button
                           key={t}
                           type="button"
                           onClick={() => setValue("time", t, { shouldValidate: true })}
-                          title={isBusy ? "Déjà demandé par un autre client, mais vous pouvez quand même le choisir" : undefined}
-                          className={`relative py-2.5 rounded-xl text-[13px] font-extrabold border transition-all ${
+                          className={`py-2.5 rounded-xl text-[13px] font-extrabold border transition-all ${
                             isSelected
                               ? "bg-slate-900 border-slate-900 text-white shadow-sm"
                               : "bg-slate-50 border-slate-200 text-slate-600 hover:border-slate-400"
                           }`}
                         >
                           {t}
-                          {isBusy && !isSelected && (
-                            <span className="absolute top-1 right-1.5 w-1.5 h-1.5 rounded-full bg-amber-400" />
-                          )}
                         </button>
                       );
                     })}
